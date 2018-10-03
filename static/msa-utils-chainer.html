@@ -1,0 +1,168 @@
+<link rel="import" href="../msa/msa.html"></link>
+<link rel="import" href="msa-edition.html"></link>
+<style>
+msa-edition-mover {
+	position: absolute;
+	top: 0;
+	left: -34px;
+}
+msa-edition-mover input {
+	cursor: move;
+	padding: 5px;
+	width: 24px;
+	height: 24px;
+	border: 1px solid #aaa;
+	border-right: 0;
+	border-radius: 5px 0px 0px 5px;
+	box-shadow: -1pt 1pt 2pt 1pt #aaa;
+	background: white;
+}
+</style>
+<template id="msa-edition-mover">
+	<input type="image" src='data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22%23999%22%20viewBox%3D%220%200%201024%201024%22%3E%3Cpath%20class%3D%22path1%22%20d%3D%22M512%200q18%200%2030.333%2012.333l150.667%20151q12.667%2012.667%2012.667%2030.333t-12.5%2030.167-30.167%2012.5-30.333-12.667l-78-78v323.667h323.667l-78-78q-12.667-12.667-12.667-30.333t12.5-30.167%2030.167-12.5%2030.333%2012.667l151%20150.667q12.333%2012.333%2012.333%2030.333t-12.333%2030l-151%20151q-12.667%2012.667-30.333%2012.667t-30.167-12.5-12.5-30.167%2012.667-30.333l78-78h-323.667v323.667l78-78q12.667-12.667%2030.333-12.667t30.167%2012.5%2012.5%2030.167-12.667%2030.333l-150.667%20151q-12.333%2012.333-30.333%2012.333-17.667%200-30-12.333l-151-151q-12.667-12.667-12.667-30.333t12.5-30.167%2030.167-12.5%2030.333%2012.667l78%2078v-323.667h-323.667l78%2078q12.667%2012.667%2012.667%2030.333t-12.5%2030.167-30.167%2012.5-30.333-12.667l-151-150.667q-12.333-12.333-12.333-30.333t12.333-30.333l151-150.667q12.667-12.667%2030.333-12.667t30.167%2012.5%2012.5%2030.167-12.667%2030.333l-78%2078h323.667v-323.667l-78%2078q-12.667%2012.667-30.333%2012.667t-30.167-12.5-12.5-30.167%2012.667-30.333l150.667-151q12.333-12.333%2030.333-12.333z%22%3E%3C%2Fpath%3E%0A%3C%2Fsvg%3E' />
+</template>
+<script>
+Msa.registerElement("msa-edition-mover", {template:"#msa-edition-mover",
+	oncreate: function(){
+		this.addEventListener("mousedown", function(evt){
+			Edition.movingMover = this
+			this.originalX = this.offsetLeft
+			this.originalY = this.offsetTop
+			this.originalMouseX = evt.pageX
+			this.originalMouseY = evt.pageY
+			this.originalParentX = this.parentNode.offsetLeft
+			this.originalParentY = this.parentNode.offsetTop
+			// avoid selecting content in page
+			evt.preventDefault()
+		})
+	}
+})
+document.addEventListener("mouseup", function(evt){
+	Edition.movingMover = null
+})
+document.addEventListener("mousemove", function(evt){
+	var mover = Edition.movingMover
+	if(!mover) return
+	// determine mouse movement
+	var mouseDiffX = evt.pageX - mover.originalMouseX
+	var mouseDiffY = evt.pageY - mover.originalMouseY
+	Edition.setPos(mover.parentNode, {
+		left:(mover.originalParentX + mouseDiffX),
+		top:(mover.originalParentY + mouseDiffY)
+	})
+//	updateChainsPos(mover.target)
+})
+
+</script>
+
+<script>
+	var makeChainableIfNeeded = function(dom) {
+		var edition = dom.edition
+		var chainable = edition && (edition.movable || edition.resizable)
+		makeChainable(dom, chainable)
+	}
+	
+	var makeChainable = function(dom, chainable) {
+		if(!dom.edition) dom.edition = {}
+		dom.edition.chainable = chainable
+		var chains = dom.edition.chains
+		if(chainable) {
+			// create invisible chains (if needed)
+			if(!chains) {
+				chains = dom.edition.chains = { left:null, right:null, top:null, bottom:null }
+				for(var type in chains) {
+					var chain = dom.edition.chains[type] = document.createElement("msa-editor-chain")
+					chain.init(type, dom)
+					document.body.appendChild(chain)
+				}
+			}
+			// determine if chains are active
+			var style = dom.style
+			var width = style.width, height = style.minHeight
+			var top = style.top, bottom = style.bottom, left = style.left, right = style.right
+			var leftChained = chains.left.active = (left && left!="")
+			chains.right.active = (!leftChained || width.indexOf("calc(100% - ")!=-1)
+			var topChained = chains.top.active = (top && top!="")
+			chains.bottom.active = (!topChained || height.indexOf("calc(100% - ")!=-1)
+		} else {
+			// remove chains (if exist)
+			if(!chains) return
+			for(var type in chains) chains[type].remove()
+			dom.edition.chains = null
+		}
+	}
+	
+	Msa.registerElement("msa-editor-chain", {shadow:"#msa-editor-chain",
+		oncreate: function(){
+			this.active = false
+			Bind(this.shadowRoot, this)
+			this.init = function(type, target) {
+				this.type = type
+				this.target = target
+				this.updatePos()
+			}
+			this.updatePos = function() {
+				var target = this.target, parent = target.parentNode, type = this.type, style = this.style
+				var targetPos = target.getBoundingClientRect()
+				var parentPos = parent.getBoundingClientRect()
+				if(type=="left" || type=="right") {
+					style.top = targetPos.top + target.offsetHeight/2 + "px"
+					style.height = ""
+				}
+				if(type=="left") {
+					style.left = parentPos.left + "px"
+					style.width = (targetPos.left - parentPos.left) + "px"
+				}
+				if(type=="right") {
+					style.left = (targetPos.left + target.offsetWidth) + "px"
+					style.width = ( (parentPos.left + parent.offsetWidth) - (targetPos.left + target.offsetWidth) ) + "px"
+				}
+				if(type=="top" || type=="bottom") {
+					style.left = targetPos.left + target.offsetWidth/2 + "px"
+					style.width = ""
+				}
+				if(type=="top") {
+					style.top = parentPos.top + "px"
+					style.height = (targetPos.top - parentPos.top) + "px"
+				}
+				if(type=="bottom") {
+					style.top = (targetPos.top + target.offsetHeight) + "px"
+					style.height = ( (parentPos.top + parent.offsetHeight) - (targetPos.top + target.offsetHeight) ) + "px"
+				}
+			}
+			this.addEventListener("click", function(evt){
+				this.active = !this.active
+				var type = this.type
+				if(type=="left") { var opposedType = "right"; var axis="x"; }
+				else if(type=="right") { var opposedType = "left"; var axis="x"; }
+				else if(type=="top") { var opposedType = "bottom"; var axis="y"; }
+				else if(type=="bottom") { var opposedType = "top"; var axis="y"; }
+				var target = this.target, chains = target.edition.chains, targetStyle = target.style, parent = target.parentNode
+				var opposedChain = chains[opposedType]
+				if(!opposedChain.active) opposedChain.active = true
+				if(axis=="x") setPosX(this.target)
+				else if(axis=="y") setPosY(this.target)
+				// avoid selecting content in page
+				evt.preventDefault()
+			})
+		}
+	})
+	
+	var showChains = function(dom, show) {
+		var chains = dom.edition.chains
+		if(!chains) return
+		for(var type in chains) {
+			var chain = chains[type]
+			if(!chain) continue
+			if(show && dom.edition.chainable) chain.style.display = 'block'
+			else chain.style.display = ''
+		}
+	}
+	
+	var updateChainsPos = function(dom) {
+		if(!dom.edition || !dom.edition.chainable) return
+		var chains = dom.edition.chains
+		if(!chains) return
+		for(var type in chains) chains[type].updatePos()
+	}
+</script>
