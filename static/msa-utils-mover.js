@@ -1,51 +1,75 @@
-<link rel="import" href="../msa/msa.html"></link>
-<link rel="import" href="msa-utils-common.html"></link>
-<style>
-msa-utils-mover {
-	position: absolute;
-	top: 0;
-	left: -32px;
-}
-msa-utils-mover input {
-	cursor: move;
-	padding: 3px;
-	width: 24px;
-	height: 24px;
-	border: 1px solid #aaa;
-	border-right: 0;
-	border-radius: 5px 0px 0px 5px;
-	box-shadow: -1pt 1pt 2pt 1pt #aaa;
-	background: white;
-}
-</style>
-<template id="msa-utils-mover">
+import { importHtml } from "/msa/msa.js"
+
+const MsaUtilsMover = window.MsaUtilsMover = {}
+
+// style
+
+importHtml(`<style>
+	msa-utils-mover {
+		position: absolute;
+		top: 0;
+		left: -32px;
+	}
+	msa-utils-mover input {
+		cursor: move;
+		padding: 3px;
+		width: 24px;
+		height: 24px;
+		border: 1px solid #aaa;
+		border-right: 0;
+		border-radius: 5px 0px 0px 5px;
+		box-shadow: -1pt 1pt 2pt 1pt #aaa;
+		background: white;
+	}
+</style>`)
+
+// content
+
+const content = `
 	<input type="image" src='data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22%23999%22%20viewBox%3D%220%200%201024%201024%22%3E%3Cpath%20class%3D%22path1%22%20d%3D%22M512%200q18%200%2030.333%2012.333l150.667%20151q12.667%2012.667%2012.667%2030.333t-12.5%2030.167-30.167%2012.5-30.333-12.667l-78-78v323.667h323.667l-78-78q-12.667-12.667-12.667-30.333t12.5-30.167%2030.167-12.5%2030.333%2012.667l151%20150.667q12.333%2012.333%2012.333%2030.333t-12.333%2030l-151%20151q-12.667%2012.667-30.333%2012.667t-30.167-12.5-12.5-30.167%2012.667-30.333l78-78h-323.667v323.667l78-78q12.667-12.667%2030.333-12.667t30.167%2012.5%2012.5%2030.167-12.667%2030.333l-150.667%20151q-12.333%2012.333-30.333%2012.333-17.667%200-30-12.333l-151-151q-12.667-12.667-12.667-30.333t12.5-30.167%2030.167-12.5%2030.333%2012.667l78%2078v-323.667h-323.667l78%2078q12.667%2012.667%2012.667%2030.333t-12.5%2030.167-30.167%2012.5-30.333-12.667l-151-150.667q-12.333-12.333-12.333-30.333t12.333-30.333l151-150.667q12.667-12.667%2030.333-12.667t30.167%2012.5%2012.5%2030.167-12.667%2030.333l-78%2078h323.667v-323.667l-78%2078q-12.667%2012.667-30.333%2012.667t-30.167-12.5-12.5-30.167%2012.667-30.333l150.667-151q12.333-12.333%2030.333-12.333z%22%3E%3C%2Fpath%3E%0A%3C%2Fsvg%3E' />
-</template>
-<script>
-(function(){
+`
 
 
 // mover ///////////////////////////////////////////
 
 var _MovingMover = null
 
-var moverMethods = {}
-moverMethods.link = function(target) {
+export class HTMLMsaUtilsMoverElement extends HTMLElement {}
+MsaUtilsMover.HTMLMsaUtilsMoverElement = HTMLMsaUtilsMoverElement 
+const MsaUtilsMoverPt = HTMLMsaUtilsMoverElement.prototype
+
+MsaUtilsMoverPt.connectedCallback = function() {
+	this.initContent()
+	this.setAttribute("msa-editor", true)
+	this.addEventListener("mousedown", evt => this.move(evt))
+	this.link(this.parentNode)
+}
+
+MsaUtilsMoverPt.initContent = function() {
+	this.innerHTML = content
+}
+
+MsaUtilsMoverPt.disconnectedCallback = function() {
+	this.unlink()
+}
+
+MsaUtilsMoverPt.link = function(target) {
 	this.target = target
 	target.msaUtilsMover = this
 }
-moverMethods.unlink = function(target) {
+MsaUtilsMoverPt.unlink = function(target) {
 	delete this.target.msaUtilsMover
 	delete this.target
 }
-moverMethods.show = function() {
+
+MsaUtilsMoverPt.show = function() {
 	this.style.display = ""
 }
-moverMethods.hide = function() {
+MsaUtilsMoverPt.hide = function() {
 	this.style.display = "none"
 }
 
-var moverOnMouseDown = function(evt){
+MsaUtilsMoverPt.move = function(evt){
 	var target = this.target
 	if(!target) return
 	_MovingMover = this
@@ -68,20 +92,8 @@ var moverOnMouseDown = function(evt){
 	evt.preventDefault()
 }
 
-Msa.registerElement("msa-utils-mover", {template:"#msa-utils-mover",
-	oncreate: function(){
-		Object.assign(this, moverMethods)
-		this.setAttribute("msa-editor", true)
-		this.addEventListener("mousedown", moverOnMouseDown)
-	},
-	onattach: function(){
-		this.link(this.parentNode)
-	},
-	ondetach: function() {
-		this.unlink()
-	}
-})
-
+// register elem
+customElements.define("msa-utils-mover", HTMLMsaUtilsMoverElement)
 
 
 // document listener //////////////////////////////////////////////
@@ -120,17 +132,23 @@ document.addEventListener("mousemove", function(evt){
 
 // various ///////////////////////////////////////////////
 
-var isSize = MsaUtils.isSize
-var getSizeVal = MsaUtils.getSizeVal
-var getSizeUnit = MsaUtils.getSizeUnit
-
-var getPosVal = function(size) {
+const isSize = function(size) {
+	return size.search(/^[0-9.]+[px%]+$/)!=-1
+}
+const getSizeVal = function(size) {
 	return size.match(/^[0-9.]*/)[0]
 }
-var getPosUnit = function(size) {
+const getSizeUnit = function(size) {
 	return size.match(/[a-z%]*$/)[0]
 }
-var computeRatio = function(val1, val2) {
+
+const getPosVal = function(size) {
+	return size.match(/^[0-9.]*/)[0]
+}
+const getPosUnit = function(size) {
+	return size.match(/[a-z%]*$/)[0]
+}
+const computeRatio = function(val1, val2) {
 	if(val1===0 && val2===0) return 1
 	return val1 / val2
 }
@@ -139,8 +157,7 @@ var computeRatio = function(val1, val2) {
 
 // main function ////////////////////////////////////////
 
-if(!document.MsaUtils) document.MsaUtils = MsaUtils = {}
-MsaUtils.makeMovable = function(target, movable) {
+export function makeMovable(target, movable) {
 	if(movable===undefined) movable = true
 	if(typeof target==="string") target = document.querySelectorAll(target)
 	var mover = target.msaUtilsMover
@@ -157,6 +174,4 @@ MsaUtils.makeMovable = function(target, movable) {
 	}
 	return mover
 }
-
-})()
-</script>
+MsaUtilsMover.makeMovable = makeMovable
