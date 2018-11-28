@@ -1,1 +1,1 @@
-module.exports = Msa.module("utils")
+module.exports = new Msa.Module("utils")

@@ -296,7 +296,7 @@ export class HTMLMsaUtilsPopupInputElement extends HTMLMsaUtilsPopupElement {
 	}
 	input(){
 		const val = this.Q("input").value
-		this.dispatchEvent(new Event("input", {'detail': val}))
+		this.dispatchEvent(new Event("input", { detail: val }))
 		this.remove()
 	}
 }
