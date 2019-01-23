@@ -1,29 +1,30 @@
-<script>
-(function(){
-
-if(!document.MsaUtils) document.MsaUtils = MsaUtils = {}
+if(!window.MsaUtils) MsaUtils = window.MsaUtils = {}
 
 // events
 
-MsaUtils.trigger = function(el, evt) {
+export function trigger(el, evt) {
 	el.dispatchEvent(new Event(evt))
 }
+MsaUtils.trigger = trigger
 
 // size
 
-MsaUtils.isSize = function(size) {
+export function isSize(size) {
 	return size.search(/^[0-9.]+[px%]+$/)!=-1
 }
-MsaUtils.getSizeVal = function(size) {
+MsaUtils.isSIze = isSize
+export function getSizeVal(size) {
 	return size.match(/^[0-9.]*/)[0]
 }
-MsaUtils.getSizeUnit = function(size) {
+MsaUtils.getSizeVal = getSizeVal
+export function getSizeUnit(size) {
 	return size.match(/[a-z%]*$/)[0]
 }
+MsaUtils.getSizeUnit = getSizeUnit
 
 // backup & restore
 
-MsaUtils.backup = function(target, args) {
+export function backup(target, args) {
 	// default args
 	var key = defArg(args, "key", "MsaUtilsStyleBackup")
 	var innerHTML = defArg(args, "innerHTML", false)
@@ -73,8 +74,9 @@ MsaUtils.backup = function(target, args) {
 		}
 	}
 }
+MsaUtils.backup = backup
 
-MsaUtils.restore = function(target, args) {
+export function restore(target, args) {
 	// default args
 	var key = defArg(args, "key", "MsaUtilsStyleBackup")
 	var clean = defArg(args, "clean", true)
@@ -119,11 +121,12 @@ MsaUtils.restore = function(target, args) {
 	if(clean) delete target[key]
 	return true
 }
+MsaUtils.restore = restore
+
+// various
 
 var defArg = function(args, key, defArg) {
 	var val = args && args[key]
 	return (val!==undefined) ? val : defArg
 }
 
-})()
-</script>

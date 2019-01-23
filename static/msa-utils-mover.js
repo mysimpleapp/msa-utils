@@ -1,6 +1,6 @@
 import { importHtml } from "/msa/msa.js"
 
-const MsaUtilsMover = window.MsaUtilsMover = {}
+if(!window.MsaUtils) MsaUtils = window.MsaUtils = {}
 
 // style
 
@@ -35,7 +35,7 @@ const content = `
 var _MovingMover = null
 
 export class HTMLMsaUtilsMoverElement extends HTMLElement {}
-MsaUtilsMover.HTMLMsaUtilsMoverElement = HTMLMsaUtilsMoverElement 
+MsaUtils.HTMLMsaUtilsMoverElement = HTMLMsaUtilsMoverElement 
 const MsaUtilsMoverPt = HTMLMsaUtilsMoverElement.prototype
 
 MsaUtilsMoverPt.connectedCallback = function() {
@@ -174,4 +174,4 @@ export function makeMovable(target, movable) {
 	}
 	return mover
 }
-MsaUtilsMover.makeMovable = makeMovable
+MsaUtils.makeMovable = makeMovable
