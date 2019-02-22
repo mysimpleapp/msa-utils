@@ -8,6 +8,5 @@
   },
   "author": "Nicolas CARREZ <nicolas.carrez@gmail.com>",
   "license": "MIT",
-  "dependencies": {
-  }
+  "msaKey": "utils"
 }
