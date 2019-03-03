@@ -250,7 +250,7 @@ export function createConfirmPopup(text, onConfirm) {
 	if(onConfirm) popup.addEventListener("confirm", onConfirm)
 	// focus first button
 	document.body.appendChild(popup)
-	popup.Q(".msa-utils-popup-buttons button").focus()
+	popup.Q("button.no").focus()
 	return popup
 }
 MsaUtils.createConfirmPopup = createConfirmPopup
