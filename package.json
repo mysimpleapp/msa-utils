@@ -1,7 +1,7 @@
 {
   "name": "msa-utils",
   "version": "0.1.0",
-  "description": "Utils middlewares for MySimpleApp",
+  "description": "MySimpleApp module offering some utilities to other modules",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
