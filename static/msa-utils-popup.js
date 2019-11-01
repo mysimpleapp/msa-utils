@@ -94,15 +94,42 @@ HTMLMsaUtilsPopupElement.prototype.Q = Q
 // register custom elem
 customElements.define("msa-utils-popup", HTMLMsaUtilsPopupElement)
 
-export function createPopup(html) {
+export function createPopup(dom, kwargs) {
 	const popup = document.createElement("msa-utils-popup")
-	if(html instanceof HTMLElement)
-		popup.appendChild(html)
-	else
-		importHtml(html, popup)
+	// title
+	const title = getArg(kwargs, "title")
+	if(title) {
+		const h1 = document.createElement("h1")
+		h1.textContent= title
+		popup.appendChild(h1)
+	}
+	// text
+	const text = getArg(kwargs, "text")
+	if(text) {
+		const div = document.createElement("div")
+		div.textContent= text
+		popup.appendChild(div)
+	}
+	// content
+	popup.appendChild(dom)
+	popup.content = dom
+	// closeOn
+	const closeOn = getArg(kwargs, "closeOn")
+	if(closeOn)
+		dom.addEventListener(closeOn, () => popup.remove())
+	// append to body
 	document.body.appendChild(popup)
 	return popup
 }
+MsaUtils.createPopup = createPopup
+
+export async function importAsPopup(html, kwargs) {
+	if(!(html instanceof HTMLElement)){
+		html = (await importHtml(html, true))[0]
+	}
+	return createPopup(html, kwargs)
+}
+MsaUtils.importAsPopup = importAsPopup
 /*
 export function createPopup(el, args) {
 	// if el is string, create element with this name
@@ -391,3 +418,10 @@ MsaUtils.createPopup = createPopup
 MsaUtils.createConfirmPopup = createConfirmPopup
 MsaUtils.createInputPopup = createInputPopup
 */
+
+// utils /////////////////////////////
+
+function getArg(obj, key){
+	if(!obj) return
+	return obj[key]
+}
