@@ -111,6 +111,7 @@ export function createPopup(dom, kwargs) {
 		popup.appendChild(div)
 	}
 	// content
+	dom = asDom(dom)
 	popup.appendChild(dom)
 	popup.content = dom
 	// closeOn
@@ -424,4 +425,14 @@ MsaUtils.createInputPopup = createInputPopup
 function getArg(obj, key){
 	if(!obj) return
 	return obj[key]
+}
+
+function asDom(d){
+	if(d instanceof HTMLElement)
+		return d
+	if(typeof d === "string"){
+		const div = document.createElement('div')
+		div.innerHTML = d
+		return div
+	}
 }
