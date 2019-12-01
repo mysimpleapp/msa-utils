@@ -22,22 +22,23 @@ importHtml(`<style>
 		top: 50px;
 		left: 50px;
 		background: white;
-		padding: 15px;
+		padding: 0 15px;
 		box-shadow: 1pt 1pt 2pt 1pt #aaa;
+		z-index: 100;
 	}
-	.msa-utils-popup-buttons {
+	.msa-utils-popup .buttons {
 		text-align: right;
 	}
-	.msa-utils-popup-buttons button {
+	.msa-utils-popup .buttons button {
 		margin-left: 10px;
 	}
-	.msa-utils-popup-close-icon {
+	.msa-utils-popup .close-icon {
 		display: block-inline;
 		position: absolute;
 		top: 3px;
 		right: 3px;
 	}
-	.msa-utils-popup-close-icon svg {
+	.msa-utils-popup .close-icon svg {
 		width: 7px;
 		height: 7px;
 		padding: 2px;
@@ -47,7 +48,7 @@ importHtml(`<style>
 		border-radius: 2px;
 		border: 1px solid #999;
 	}
-	.msa-utils-popup-close-icon svg:hover {
+	.msa-utils-popup .close-icon svg:hover {
 		background-color: #EEE;
 	}
 	msa-utils-popup-confirm p, msa-utils-popup-input p {
@@ -57,22 +58,79 @@ importHtml(`<style>
 
 // popup /////////////////////////////////
 
+const popupTemplate = `
+<h1 class="title" style="display:none"></h1>
+<p class="text" style="display:none"></p>
+<p class="content"></p>
+<p class="buttons" style="display:none"></p>
+`
+
 export class HTMLMsaUtilsPopupElement extends HTMLElement {
 
 	connectedCallback(){
 		this.classList.add("msa-utils-popup")
-		this.centerOnVisibleArea()
-		makeMovable(this)
+		this.innerHTML = this.getTemplate()
+		this.initTitle()
+		this.initText()
+		this.initContent()
+		this.initButtons()
 		if(this.getAttribute("close-icon") !== "false")
 			this.addCloseIcon()
+		this.centerOnVisibleArea()
+		makeMovable(this)
+	}
+
+	getTemplate(){
+		return popupTemplate
+	}
+
+	getContent(){}
+	initContent(){
+		const content = this.getContent()
+		if(content){
+			const contentEl = asDom(content)
+			this.Q(".content").appendChild(contentEl)
+			this.content = contentEl
+		}
+	}
+
+	getTitle(){}
+	initTitle(){
+		const title = this.getTitle()
+		if(title){
+			const titleEl = this.Q(".title")
+			titleEl.style.display = ""
+			titleEl.textContent = title
+		}
+	}
+
+	getText(){}
+	initText(){
+		const text = this.getText()
+		if(text){
+			const textEl = this.Q(".text")
+			textEl.style.display = ""
+			textEl.textContent = text
+		}
+	}
+
+	getButtons(){}
+	initButtons(){
+		const buttons = this.getButtons()
+		if(buttons){
+			const buttonsEl = this.Q(".buttons")
+			buttonsEl.style.display = ""
+			for(const b in buttons)
+				buttonsEl.appendChild(buttons[b])
+		}
 	}
 
 	addCloseIcon(){
 		const closeIcon = document.createElement("div")
-		closeIcon.className = "msa-utils-popup-close-icon"
+		closeIcon.className = "close-icon"
 		closeIcon.innerHTML = '<svg><use xlink:href="#msa-utils-popup-close"></use></svg>'
 		this.appendChild(closeIcon)
-		closeIcon.onclick = () => { this.cancel() }
+		closeIcon.onclick = () => this.cancel()
 	}
 
 	centerOnVisibleArea() {
@@ -91,38 +149,42 @@ export class HTMLMsaUtilsPopupElement extends HTMLElement {
 MsaUtils.HTMLMsaUtilsPopupElement = HTMLMsaUtilsPopupElement
 HTMLMsaUtilsPopupElement.prototype.Q = Q
 
-// register custom elem
 customElements.define("msa-utils-popup", HTMLMsaUtilsPopupElement)
 
-export function createPopup(dom, kwargs) {
-	const popup = document.createElement("msa-utils-popup")
+
+function _createPopup(dom, kwargs){
+	const popupTagName = getArg(kwargs, "popupTagName", "msa-utils-popup")
+	const popup = document.createElement(popupTagName)
 	// title
 	const title = getArg(kwargs, "title")
-	if(title) {
-		const h1 = document.createElement("h1")
-		h1.textContent= title
-		popup.appendChild(h1)
-	}
+	if(title) popup.getTitle = () => title
 	// text
 	const text = getArg(kwargs, "text")
-	if(text) {
-		const div = document.createElement("div")
-		div.textContent= text
-		popup.appendChild(div)
-	}
+	if(text) popup.getText = () => text
 	// content
-	dom = asDom(dom)
-	popup.appendChild(dom)
-	popup.content = dom
+	popup.getContent = () => dom
 	// closeOn
 	const closeOn = getArg(kwargs, "closeOn")
 	if(closeOn)
 		dom.addEventListener(closeOn, () => popup.remove())
-	// append to body
-	document.body.appendChild(popup)
 	return popup
 }
+
+
+export function addPopup(parent, dom, kwargs) {
+	const popup = _createPopup(dom, kwargs)
+	parent.appendChild(popup)
+	return popup
+}
+MsaUtils.addPopup = addPopup
+
+
+export function createPopup(dom, kwargs) {
+	console.warn("MsaPopup.createPopup is DEPRECATED")
+	return addPopup(document.body, dom, kwargs)
+}
 MsaUtils.createPopup = createPopup
+
 
 export async function importAsPopup(html, kwargs) {
 	if(!(html instanceof HTMLElement)){
@@ -131,134 +193,47 @@ export async function importAsPopup(html, kwargs) {
 	return createPopup(html, kwargs)
 }
 MsaUtils.importAsPopup = importAsPopup
-/*
-export function createPopup(el, args) {
-	// if el is string, create element with this name
-	if(typeof el=="string") el = document.createElement(el)
-	// make el as popup
-	el.classList.add("msa-utils-popup")
-	MsaUtils.makeMovable(el)
-	if(!args) args = {}
-	// callbacks
-	if(!el.msaUtilsPopupActs) el.msaUtilsPopupActs = popupActs
-	el.msaUtilsPopupOnClose = args.onClose
-	el.msaUtilsPopupOnCancel = args.onCancel
-	// buttons
-	var buttons = args.buttons
-	if(buttons) {
-		for(var i=0, len=buttons.length; i<len; ++i) {
-			addButton(el, buttons[i])
-		}
+
+
+// message /////////////////////////////////
+
+export class HTMLMsaUtilsPopupMessageElement extends HTMLMsaUtilsPopupElement {
+	getButtons(){
+		const okBut = document.createElement("button")
+		okBut.textContent = "OK"
+		okBut.classList.add("ok")
+		okBut.onclick = () => this.remove()
+		return [okBut]
 	}
-	// close icon
-	var addCloseIcon = defArg(args.addCloseIcon, true)
-	if(addCloseIcon) {
-		var closeIcon = document.createElement("div")
-		closeIcon.className = "msa-utils-popup-close-icon"
-		closeIcon.innerHTML = '<svg><use xlink:href="#msa-utils-popup-close"></use></svg>'
-		el.appendChild(closeIcon)
-		closeIcon.popup = el
-		closeIcon.onclick = closeIconOnClick
-	}
-	// TODO: place popup in function of screen scrolling
-	// insert popup
-	document.body.appendChild(el)
-	return el
 }
+MsaUtils.HTMLMsaUtilsPopupMessageElement = HTMLMsaUtilsPopupMessageElement
 
-// popup acts
+customElements.define("msa-utils-popup-message", HTMLMsaUtilsPopupMessageElement)
 
-var popupOnCancel = function() {
-	if(this.msaUtilsPopupOnCancel)
-		this.msaUtilsPopupOnCancel()
+
+export function addMessagePopup(parent, dom, kwargs) {
+	const popup = addPopup(parent, dom,
+		{ "popupTagName":"msa-utils-popup-message" , ...kwargs })
+	popup.Q("button.ok").focus()
+	return popup
 }
-var popupActs = {}
-popupActs["cancel"] = popupOnCancel
+MsaUtils.addMessagePopup = addMessagePopup
 
-// close
 
-var closePopup = function(popup) {
-	if(popup.msaUtilsPopupOnClose)
-		popup.msaUtilsPopupOnClose()
-	document.body.removeChild(popup)
-}
-var closeIconOnClick = function() {
-	var popup = this.popup
-	popupOnCancel.call(popup)
-	closePopup(popup)
-}
-
-// button /////////////////////////////////
-
-var addButton = function(popup, button) {
-	// create button element
-	var buttonEl = document.createElement("button")
-	buttonEl.popup = popup
-	buttonEl.onclick = buttonOnClick
-	// button text
-	var act = button.act
-	buttonEl.textContent = defArg(button.text, 
-		(act==="cancel") ? "Cancel" : "OK")
-	// act
-	if(typeof act==="string")
-		var act = popup.msaUtilsPopupActs[act]
-	buttonEl.act = act
-	// closePopup
-	buttonEl.closePopup = defArg(button.closePopup, true)
-	// get buttonsDiv (create it if needed)
-	var buttonsDiv = popup.querySelector(".msa-utils-popup-buttons")
-	if(!buttonsDiv) {
-		buttonsDiv = document.createElement("div")
-		buttonsDiv.className = "msa-utils-popup-buttons"
-		popup.appendChild(buttonsDiv)
-	}
-	//insert button in buttonsDiv
-	buttonsDiv.appendChild(buttonEl)
-	return buttonEl
-}
-
-var buttonOnClick = function(){
-	var popup = this.popup
-	// act
-	var act = this.act
-	if(act) act.call(popup)
-	// close
-	if(this.closePopup)
-		closePopup(popup)
-}
-*/
 
 // confirm /////////////////////////////////
 
-const contentConfirm = `
-	<p class="text"></p>
-	<div style="text-align:right">
-		<button class="yes">Yes</button> 
-		<button class="no">No</button>
-	</div>
-`
-
 export class HTMLMsaUtilsPopupConfirmElement extends HTMLMsaUtilsPopupElement {
-	connectedCallback(){
-		const text = this.textContent
-		this.initContent()
-		super.connectedCallback()
-		this.setText(text)
-		this.initButtons()
-	}
-	initContent(){
-		this.innerHTML = contentConfirm
-	}
-	setText(text){
-		this.Q(".text").textContent = text
-	}
-	initButtons(){
-		this.Q("button.yes").onclick = () => {
-			this.confirm()
-		}
-		this.Q("button.no").onclick = () => {
-			this.cancel()
-		}
+	getButtons(){
+		const yesBut = document.createElement("button")
+		yesBut.textContent = "Yes"
+		yesBut.classList.add("yes")
+		yesBut.onclick = () => this.confirm()
+		const noBut = document.createElement("button")
+		noBut.textContent = "No"
+		noBut.classList.add("no")
+		noBut.onclick = () => this.cancel()
+		return [yesBut, noBut]
 	}
 	confirm(){
 		this.dispatchEvent(new Event("confirm"))
@@ -267,85 +242,54 @@ export class HTMLMsaUtilsPopupConfirmElement extends HTMLMsaUtilsPopupElement {
 }
 MsaUtils.HTMLMsaUtilsPopupConfirmElement = HTMLMsaUtilsPopupConfirmElement
 
-// register custom elem
 customElements.define("msa-utils-popup-confirm", HTMLMsaUtilsPopupConfirmElement)
 
-// create confirm popup
-export function createConfirmPopup(text, onConfirm) {
-	// create el from text
-	const popup = document.createElement("msa-utils-popup-confirm")
-	popup.textContent = text
-	if(onConfirm) popup.addEventListener("confirm", onConfirm)
-	// focus first button
-	document.body.appendChild(popup)
+
+export function addConfirmPopup(parent, dom, onConfirm, kwargs) {
+	const popup = addPopup(parent, dom,
+		{ "popupTagName":"msa-utils-popup-confirm" , ...kwargs })
 	popup.Q("button.no").focus()
+	if(onConfirm) popup.addEventListerner("confirm", onConfirm)
 	return popup
 }
-MsaUtils.createConfirmPopup = createConfirmPopup
-/*
-// confirm popup acts
+MsaUtils.addConfirmPopup = addConfirmPopup
 
-var confirmOnConfirm = function() {
-	if(this.msaUtilsPopupOnConfirm)
-		this.msaUtilsPopupOnConfirm()
+
+export function createConfirmPopup(dom, onConfirm, kwargs) {
+	console.warn("MsaPopup.createConfirmPopup is DEPRECATED")
+	return addConfirmPopup(document.body, dom, onConfirm, kwargs)
 }
-var confirmPopupActs = Object.assign({}, popupActs)
-confirmPopupActs["confirm"] = confirmOnConfirm
+MsaUtils.createConfirmPopup = createConfirmPopup
 
-// register confirm popup
 
-Msa.registerElement("msa-utils-popup-confirm", {
-	template:"#msa-utils-popup-confirm"
-})
-*/
 // input /////////////////////////////////
 
-// content
-const contentInput = `
-	<p class="text"></p>
-	<p><input type="text"></p>
-	<div style="text-align:right">
-		<button class="yes">Yes</button> 
-		<button class="no">No</button>
-	</div>
-`
-
 export class HTMLMsaUtilsPopupInputElement extends HTMLMsaUtilsPopupElement {
-	connectedCallback(){
-		const text = this.textContent
-		this.initContent()
-		super.connectedCallback()
-		this.setText(text)
-		if(this.hasAttribute("type"))
-			this.setInputType(this.getAttribute("type"))
+	getContent(){
+		const inputEl = document.createElement("input")
+		inputEl.classList.add("input")
+		const inputType = this.getAttribute("type") || "text"
+		inputEl.type = type
 		if(this.hasAttribute("value"))
 			this.setValue(this.getAttribute("value"))
-		this.initButtons()
-	}
-	initContent(){
-		this.innerHTML = contentInput
-	}
-	setText(text){
-		this.Q(".text").textContent = text
-	}
-	setInputType(type){
-		this.Q("input").type = type
-	}
-	setValue(val){
-		this.Q("input").value = val
-	}
-	initButtons(){
-		this.Q("input").onkeydown = evt => {
-			if(evt.key === "Enter") {
-				this.validate()
+		if(type==="text"){
+			inputEl.onkeydown = evt => {
+				if(evt.key === "Enter") {
+					this.validate()
+				}
 			}
 		}
-		this.Q("button.yes").onclick = () => {
-			this.validate()
-		}
-		this.Q("button.no").onclick = () => {
-			this.cancel()
-		}
+	}
+	getButtons(){
+		const yesBut = document.createElement("button")
+		yesBut.textContent = "Yes"
+		yesBut.classList.add("yes")
+		yesBut.onclick = () => this.validate()
+		const noBut = document.createElement("button")
+		noBut.textContent = "No"
+		noBut.classList.add("no")
+		noBut.onclick = () => this.cancel()
+		return [yesBut, noBut]
 	}
 	validate(){
 		const val = this.Q("input").value
@@ -355,12 +299,14 @@ export class HTMLMsaUtilsPopupInputElement extends HTMLMsaUtilsPopupElement {
 }
 MsaUtils.HTMLMsaUtilsPopupInputElement = HTMLMsaUtilsPopupInputElement
 
-export function createInputPopup(text, arg1, arg2) {
+customElements.define("msa-utils-popup-input", HTMLMsaUtilsPopupInputElement)
+
+
+export function addInputPopup(parent, text, arg1, arg2) {
 	if(typeof arg1 === "function") var onValidate=arg1
 	else var args=arg1, onValidate=arg2
-	// create element from text
-	var popup = document.createElement("msa-utils-popup-input")
-	popup.textContent = text
+	const popup = _createPopup(parent, dom,
+		{ "popupTagName":"msa-utils-popup-input" , ...kwargs })
 	if(args && args.type)
 		popup.setAttribute("type", args.type)
 	if(args && args.value != undefined)
@@ -369,61 +315,24 @@ export function createInputPopup(text, arg1, arg2) {
 		popup.addEventListener("validate", evt => {
 			onValidate(evt.detail)
 		})
-	// focus on input
-	document.body.appendChild(popup)
+	parent.appendChild(popup)
 	popup.Q("input").focus()
 	return popup
 }
+MsaUtils.addInputPopup = addInputPopup
+
+
+export function createInputPopup(dom, arg1, arg2){
+	console.warn("MsaPopup.createInputPopup is DEPRECATED")
+	return addInputPopup(document.body, dom, arg1, arg2)
+}
 MsaUtils.createInputPopup = createInputPopup
 
-// register custom elem
-customElements.define("msa-utils-popup-input", HTMLMsaUtilsPopupInputElement)
-
-/*
-// on input key press
-var inputOnKeyPress = function(e) {
-	if(e.which == 13) {
-		var popup = this.popup
-		popup.msaUtilsPopupActs["input"].call(popup)
-		closePopup(popup)
-	}
-}
-
-// input popup acts
-
-var inputOnInput = function() {
-	if(this.msaUtilsPopupOnInput) {
-		var val = this.querySelector("input").value
-		this.msaUtilsPopupOnInput(val)
-	}
-}
-var inputPopupActs = Object.assign({}, popupActs)
-inputPopupActs["input"] = inputOnInput
-
-// register web component
-
-Msa.registerElement("msa-utils-popup-input", {
-	template:"#msa-utils-popup-input"
-})
-*/
-// common ///////////////////////////////////
-/*
-var defArg = function(arg, defVal) {
-	return (arg===undefined) ? defVal : arg
-}
-*/
-// publish //////////////////////////////////
-/*
-if(!document.MsaUtils) document.MsaUtils = MsaUtils = {}
-MsaUtils.createPopup = createPopup
-MsaUtils.createConfirmPopup = createConfirmPopup
-MsaUtils.createInputPopup = createInputPopup
-*/
 
 // utils /////////////////////////////
 
-function getArg(obj, key){
-	if(!obj) return
+function getArg(obj, key, defVal){
+	if(!obj) return defVal
 	return obj[key]
 }
 
