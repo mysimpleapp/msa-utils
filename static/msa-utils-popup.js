@@ -179,13 +179,6 @@ export function addPopup(parent, dom, kwargs) {
 MsaUtils.addPopup = addPopup
 
 
-export function createPopup(dom, kwargs) {
-	console.warn("MsaPopup.createPopup is DEPRECATED !\n"+(new Error().stack))
-	return addPopup(document.body, dom, kwargs)
-}
-MsaUtils.createPopup = createPopup
-
-
 export async function importAsPopup(parent, html, kwargs) {
 	if(!(html instanceof HTMLElement)){
 		html = (await importHtml(html, true))[0]
@@ -255,13 +248,6 @@ export function addConfirmPopup(parent, dom, onConfirm, kwargs) {
 MsaUtils.addConfirmPopup = addConfirmPopup
 
 
-export function createConfirmPopup(dom, onConfirm, kwargs) {
-	console.warn("MsaPopup.createConfirmPopup is DEPRECATED !\n"+(new Error().stack))
-	return addConfirmPopup(document.body, dom, onConfirm, kwargs)
-}
-MsaUtils.createConfirmPopup = createConfirmPopup
-
-
 // input /////////////////////////////////
 
 export class HTMLMsaUtilsPopupInputElement extends HTMLMsaUtilsPopupElement {
@@ -322,13 +308,6 @@ export function addInputPopup(parent, text, arg1, arg2) {
 	return popup
 }
 MsaUtils.addInputPopup = addInputPopup
-
-
-export function createInputPopup(dom, arg1, arg2){
-	console.warn("MsaPopup.createInputPopup is DEPRECATED !\n"+(new Error().stack))
-	return addInputPopup(document.body, dom, arg1, arg2)
-}
-MsaUtils.createInputPopup = createInputPopup
 
 
 // utils /////////////////////////////
