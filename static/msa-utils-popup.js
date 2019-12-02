@@ -51,9 +51,6 @@ importHtml(`<style>
 	.msa-utils-popup .close-icon svg:hover {
 		background-color: #EEE;
 	}
-	msa-utils-popup-confirm p, msa-utils-popup-input p {
-		margin: 0px 0px 10px 0px;
-	}
 </style>̀`)
 
 // popup /////////////////////////////////
@@ -162,7 +159,7 @@ function _createPopup(dom, kwargs){
 	const text = getArg(kwargs, "text")
 	if(text) popup.getText = () => text
 	// content
-	popup.getContent = () => dom
+	if(dom) popup.getContent = () => dom
 	// closeOn
 	const closeOn = getArg(kwargs, "closeOn")
 	if(closeOn)
@@ -180,17 +177,17 @@ MsaUtils.addPopup = addPopup
 
 
 export function createPopup(dom, kwargs) {
-	console.warn("MsaPopup.createPopup is DEPRECATED")
+	console.warn("MsaPopup.createPopup is DEPRECATED !\n"+(new Error().stack))
 	return addPopup(document.body, dom, kwargs)
 }
 MsaUtils.createPopup = createPopup
 
 
-export async function importAsPopup(html, kwargs) {
+export async function importAsPopup(parent, html, kwargs) {
 	if(!(html instanceof HTMLElement)){
 		html = (await importHtml(html, true))[0]
 	}
-	return createPopup(html, kwargs)
+	return addPopup(parent, html, kwargs)
 }
 MsaUtils.importAsPopup = importAsPopup
 
@@ -256,7 +253,7 @@ MsaUtils.addConfirmPopup = addConfirmPopup
 
 
 export function createConfirmPopup(dom, onConfirm, kwargs) {
-	console.warn("MsaPopup.createConfirmPopup is DEPRECATED")
+	console.warn("MsaPopup.createConfirmPopup is DEPRECATED !\n"+(new Error().stack))
 	return addConfirmPopup(document.body, dom, onConfirm, kwargs)
 }
 MsaUtils.createConfirmPopup = createConfirmPopup
@@ -269,16 +266,17 @@ export class HTMLMsaUtilsPopupInputElement extends HTMLMsaUtilsPopupElement {
 		const inputEl = document.createElement("input")
 		inputEl.classList.add("input")
 		const inputType = this.getAttribute("type") || "text"
-		inputEl.type = type
+		inputEl.type = inputType
 		if(this.hasAttribute("value"))
 			this.setValue(this.getAttribute("value"))
-		if(type==="text"){
+		if(inputType==="text"){
 			inputEl.onkeydown = evt => {
 				if(evt.key === "Enter") {
 					this.validate()
 				}
 			}
 		}
+		return inputEl
 	}
 	getButtons(){
 		const yesBut = document.createElement("button")
@@ -304,13 +302,14 @@ customElements.define("msa-utils-popup-input", HTMLMsaUtilsPopupInputElement)
 
 export function addInputPopup(parent, text, arg1, arg2) {
 	if(typeof arg1 === "function") var onValidate=arg1
-	else var args=arg1, onValidate=arg2
-	const popup = _createPopup(parent, dom,
+	else var kwargs=arg1, onValidate=arg2
+	const popup = _createPopup(null,
 		{ "popupTagName":"msa-utils-popup-input" , ...kwargs })
-	if(args && args.type)
-		popup.setAttribute("type", args.type)
-	if(args && args.value != undefined)
-		popup.setAttribute("value", args.value)
+	popup.getText = () => text
+	if(kwargs && kwargs.type)
+		popup.setAttribute("type", kwargs.type)
+	if(kwargs && kwargs.value != undefined)
+		popup.setAttribute("value", kwargs.value)
 	if(onValidate)
 		popup.addEventListener("validate", evt => {
 			onValidate(evt.detail)
@@ -323,7 +322,7 @@ MsaUtils.addInputPopup = addInputPopup
 
 
 export function createInputPopup(dom, arg1, arg2){
-	console.warn("MsaPopup.createInputPopup is DEPRECATED")
+	console.warn("MsaPopup.createInputPopup is DEPRECATED !\n"+(new Error().stack))
 	return addInputPopup(document.body, dom, arg1, arg2)
 }
 MsaUtils.createInputPopup = createInputPopup
@@ -333,7 +332,8 @@ MsaUtils.createInputPopup = createInputPopup
 
 function getArg(obj, key, defVal){
 	if(!obj) return defVal
-	return obj[key]
+	const val = obj[key]
+	return (val === undefined) ? defVal : val
 }
 
 function asDom(d){
