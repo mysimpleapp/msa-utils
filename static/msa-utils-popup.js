@@ -131,11 +131,14 @@ export class HTMLMsaUtilsPopupElement extends HTMLElement {
 	}
 
 	centerOnVisibleArea() {
-		const w = this.offsetWidth, h = this.offsetHeight, 
-			sx = document.documentElement.scrollLeft, sy = document.documentElement.scrollTop,
-			sw = window.innerWidth, sh = window.innerHeight
-		this.style.left = (sx + ((sw-w)/2)) +"px"
-		this.style.top = (sy + ((sh-h)/2)) +"px"
+		const sw = window.innerWidth, sh = window.innerHeight
+		this.style.left = 0
+		this.style.top = 0
+		const rect = this.getBoundingClientRect()
+		const x = rect.left, y = rect.top
+		const w = rect.right - rect.left, h = rect.bottom - rect.top
+		this.style.left = ((sw-w)/2-x) +"px"
+		this.style.top = ((sh-h)/2-y) +"px"
 	}
 
 	cancel(){
