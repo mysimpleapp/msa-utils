@@ -26,6 +26,11 @@ importHtml(`<style>
 		box-shadow: 1pt 1pt 2pt 1pt #aaa;
 		z-index: 100;
 	}
+	.msa-utils-popup .icon > * {
+		margin: 10px 10px 10px 0;
+		width: 50px;
+		height: 50px;
+	}
 	.msa-utils-popup .buttons {
 		text-align: right;
 	}
@@ -56,10 +61,15 @@ importHtml(`<style>
 // popup /////////////////////////////////
 
 const popupTemplate = `
-<h1 class="title" style="display:none"></h1>
-<p class="text" style="display:none"></p>
-<p class="content"></p>
-<p class="buttons" style="display:none"></p>
+<div style="display:flex; flex-direction:row">
+	<div class="icon" style="display:none"></div>
+	<div>
+		<h1 class="title" style="display:none"></h1>
+		<p class="text" style="display:none"></p>
+		<p class="content"></p>
+		<p class="buttons" style="display:none"></p>
+	</div>
+</div>
 `
 
 export class HTMLMsaUtilsPopupElement extends HTMLElement {
@@ -67,6 +77,7 @@ export class HTMLMsaUtilsPopupElement extends HTMLElement {
 	connectedCallback(){
 		this.classList.add("msa-utils-popup")
 		this.innerHTML = this.getTemplate()
+		this.initIcon()
 		this.initTitle()
 		this.initText()
 		this.initContent()
@@ -88,6 +99,16 @@ export class HTMLMsaUtilsPopupElement extends HTMLElement {
 			const contentEl = asDom(content)
 			this.Q(".content").appendChild(contentEl)
 			this.content = contentEl
+		}
+	}
+
+	getIcon(){}
+	initIcon(){
+		const icon = this.getIcon()
+		if(icon){
+			const iconEl = this.Q(".icon")
+			iconEl.appendChild(asImg(icon))
+			iconEl.style.display = ""
 		}
 	}
 
@@ -155,6 +176,9 @@ customElements.define("msa-utils-popup", HTMLMsaUtilsPopupElement)
 function _createPopup(dom, kwargs){
 	const popupTagName = getArg(kwargs, "popupTagName", "msa-utils-popup")
 	const popup = document.createElement(popupTagName)
+	// icon
+	const icon = getArg(kwargs, "icon")
+	if(icon) popup.getIcon = () => icon
 	// title
 	const title = getArg(kwargs, "title")
 	if(title) popup.getTitle = () => title
@@ -212,6 +236,12 @@ export function addMessagePopup(parent, dom, kwargs) {
 }
 MsaUtils.addMessagePopup = addMessagePopup
 
+
+export function addErrorPopup(parent, dom, kwargs) {
+	return addMessagePopup(parent, dom,
+		{ "icon":"/utils/img/error" , ...kwargs })
+}
+MsaUtils.addErrorPopup = addErrorPopup
 
 
 // confirm /////////////////////////////////
@@ -326,4 +356,13 @@ function asDom(d){
 		div.innerHTML = d
 		return div
 	}
+}
+
+function asImg(d){
+	if(typeof d === "string" && d.charAt(0) === '/'){
+		const img = document.createElement("img")
+		img.src = d
+		return img
+	}
+	return asDom(d)
 }
