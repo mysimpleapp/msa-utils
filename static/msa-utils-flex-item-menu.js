@@ -1,6 +1,6 @@
 import { importHtml, Q } from "/msa/msa.js"
 import { isSize, getSizeVal, getSizeUnit, trigger, backup, restore } from "/utils/msa-utils-common.js"
-import "/utils/msa-utils-popup.js"
+import { addPopup } from "/utils/msa-utils-popup.js"
 
 if(!window.MsaUtils) MsaUtils = window.MsaUtils = {}
 
@@ -712,7 +712,7 @@ export function popupFlexItemMenuFor(target) {
 		target = document.querySelector(target)
 	var menu = target.msaUtilsFlexItemMenu
 	if(!menu) {
-		menu = createPopup("msa-utils-flex-item-menu", {
+		menu = addPopup(target, "msa-utils-flex-item-menu", {
 			onCancel: () => this.restoreStyle(),
 			buttons: [
 				{ text:"OK" },
