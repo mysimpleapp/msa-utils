@@ -1,8 +1,6 @@
 import { Q, importHtml, importOnCall } from "/msa/msa.js"
 
-const moverDeps = `
-	<script type="module" src="/utils/msa-utils-mover.js"></script>`
-const makeMovable = importOnCall(moverDeps, "MsaUtils.makeMovable")
+const makeMovable = importOnCall("/utils/msa-utils-mover.js", "makeMovable")
 
 if(!window.MsaUtils) MsaUtils = window.MsaUtils = {}
 
