@@ -144,8 +144,14 @@ export class HTMLMsaUtilsPopupElement extends HTMLElement {
 		} else {
 			butEl = document.createElement("button")
 			butEl.textContent = but.text
-			if(but.fun)
-				butEl.addEventListener("click", () => but.fun.call(this))
+			if(but.fun){
+				butEl.addEventListener("click", () => {
+					but.fun.call(this)
+					if(but.close !== false) this.remove()
+				})
+			} else {
+				butEl.addEventListener("click", () => this.cancel())
+			}
 		}
 		this.Q(".buttons").appendChild(butEl)
 	}
@@ -193,6 +199,9 @@ function _createPopup(dom, kwargs){
 	if(text) popup.getText = () => text
 	// content
 	if(dom) popup.getContent = () => dom
+	// buttons
+	const buttons = getArg(kwargs, "buttons")
+	if(buttons) popup.getButtons = () => buttons
 	// closeOn
 	const closeOn = getArg(kwargs, "closeOn")
 	if(closeOn)
@@ -251,7 +260,6 @@ export class HTMLMsaUtilsPopupConfirmElement extends HTMLMsaUtilsPopupElement {
 	getButtons(){
 		const yesBut = document.createElement("button")
 		yesBut.textContent = "Yes"
-		yesBut.classList.add("yes")
 		yesBut.onclick = () => this.confirm()
 		const noBut = document.createElement("button")
 		noBut.textContent = "No"
@@ -284,34 +292,33 @@ export function addConfirmPopup(parent, dom, onConfirm, kwargs) {
 
 export class HTMLMsaUtilsPopupInputElement extends HTMLMsaUtilsPopupElement {
 	getContent(){
-		const inputEl = document.createElement("input")
-		inputEl.classList.add("input")
 		const inputType = this.getAttribute("type") || "text"
+		inputEl = document.createElement("input")
 		inputEl.type = inputType
-		if(this.hasAttribute("value"))
-			this.setValue(this.getAttribute("value"))
-		if(inputType==="text"){
+		if(inputType==="text")
 			inputEl.onkeydown = evt => {
-				if(evt.key === "Enter") {
-					this.validate()
-				}
+				if(evt.key === "Enter") this.validate()
 			}
-		}
+		if(this.hasAttribute("value"))
+			inputEl.value = this.getAttribute("value")
 		return inputEl
+	}
+	getValue(){
+		const input = this.content
+		if(input.getValue) return input.getValue()
+		else return input.value
 	}
 	getButtons(){
 		const yesBut = document.createElement("button")
-		yesBut.textContent = "Yes"
-		yesBut.classList.add("yes")
+		yesBut.textContent = "OK"
 		yesBut.onclick = () => this.validate()
 		const noBut = document.createElement("button")
-		noBut.textContent = "No"
-		noBut.classList.add("no")
+		noBut.textContent = "Cancel"
 		noBut.onclick = () => this.cancel()
 		return [yesBut, noBut]
 	}
 	validate(){
-		const val = this.Q("input").value
+		const val = this.getValue()
 		this.dispatchEvent(new CustomEvent("validate", { detail: val }))
 		this.remove()
 	}
@@ -328,8 +335,10 @@ export function addInputPopup(parent, text, kwargs) {
 		popup.setAttribute("type", kwargs.type)
 	if(kwargs && kwargs.value != undefined)
 		popup.setAttribute("value", kwargs.value)
+	if(kwargs && kwargs.input)
+		popup.getContent = () => kwargs.input
 	parent.appendChild(popup)
-	popup.Q("input").focus()
+	popup.content.focus()
 	popup.then = next => {
 		popup.addEventListener("validate", evt => next(evt.detail))
 		return popup
@@ -352,7 +361,9 @@ function asDom(d){
 	if(typeof d === "string"){
 		const div = document.createElement('div')
 		div.innerHTML = d
-		return div
+		if(div.childNodes.length === 1)
+			return div.childNodes[0]
+		else return div
 	}
 }
 
