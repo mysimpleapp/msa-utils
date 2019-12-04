@@ -1,7 +1,5 @@
 import { importHtml } from "/msa/msa.js"
 
-if(!window.MsaUtils) MsaUtils = window.MsaUtils = {}
-
 // style
 
 importHtml(`<style>
@@ -23,11 +21,10 @@ importHtml(`<style>
 	}
 </style>`)
 
-// content
+// template
 
-const content = `
-	<input type="image" src='data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22%23999%22%20viewBox%3D%220%200%201024%201024%22%3E%3Cpath%20class%3D%22path1%22%20d%3D%22M512%200q18%200%2030.333%2012.333l150.667%20151q12.667%2012.667%2012.667%2030.333t-12.5%2030.167-30.167%2012.5-30.333-12.667l-78-78v323.667h323.667l-78-78q-12.667-12.667-12.667-30.333t12.5-30.167%2030.167-12.5%2030.333%2012.667l151%20150.667q12.333%2012.333%2012.333%2030.333t-12.333%2030l-151%20151q-12.667%2012.667-30.333%2012.667t-30.167-12.5-12.5-30.167%2012.667-30.333l78-78h-323.667v323.667l78-78q12.667-12.667%2030.333-12.667t30.167%2012.5%2012.5%2030.167-12.667%2030.333l-150.667%20151q-12.333%2012.333-30.333%2012.333-17.667%200-30-12.333l-151-151q-12.667-12.667-12.667-30.333t12.5-30.167%2030.167-12.5%2030.333%2012.667l78%2078v-323.667h-323.667l78%2078q12.667%2012.667%2012.667%2030.333t-12.5%2030.167-30.167%2012.5-30.333-12.667l-151-150.667q-12.333-12.333-12.333-30.333t12.333-30.333l151-150.667q12.667-12.667%2030.333-12.667t30.167%2012.5%2012.5%2030.167-12.667%2030.333l-78%2078h323.667v-323.667l-78%2078q-12.667%2012.667-30.333%2012.667t-30.167-12.5-12.5-30.167%2012.667-30.333l150.667-151q12.333-12.333%2030.333-12.333z%22%3E%3C%2Fpath%3E%0A%3C%2Fsvg%3E' />
-`
+const template = `
+	<input type="image" src='data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22%23999%22%20viewBox%3D%220%200%201024%201024%22%3E%3Cpath%20class%3D%22path1%22%20d%3D%22M512%200q18%200%2030.333%2012.333l150.667%20151q12.667%2012.667%2012.667%2030.333t-12.5%2030.167-30.167%2012.5-30.333-12.667l-78-78v323.667h323.667l-78-78q-12.667-12.667-12.667-30.333t12.5-30.167%2030.167-12.5%2030.333%2012.667l151%20150.667q12.333%2012.333%2012.333%2030.333t-12.333%2030l-151%20151q-12.667%2012.667-30.333%2012.667t-30.167-12.5-12.5-30.167%2012.667-30.333l78-78h-323.667v323.667l78-78q12.667-12.667%2030.333-12.667t30.167%2012.5%2012.5%2030.167-12.667%2030.333l-150.667%20151q-12.333%2012.333-30.333%2012.333-17.667%200-30-12.333l-151-151q-12.667-12.667-12.667-30.333t12.5-30.167%2030.167-12.5%2030.333%2012.667l78%2078v-323.667h-323.667l78%2078q12.667%2012.667%2012.667%2030.333t-12.5%2030.167-30.167%2012.5-30.333-12.667l-151-150.667q-12.333-12.333-12.333-30.333t12.333-30.333l151-150.667q12.667-12.667%2030.333-12.667t30.167%2012.5%2012.5%2030.167-12.667%2030.333l-78%2078h323.667v-323.667l-78%2078q-12.667%2012.667-30.333%2012.667t-30.167-12.5-12.5-30.167%2012.667-30.333l150.667-151q12.333-12.333%2030.333-12.333z%22%3E%3C%2Fpath%3E%0A%3C%2Fsvg%3E' />`
 
 
 // mover ///////////////////////////////////////////
@@ -35,18 +32,17 @@ const content = `
 var _MovingMover = null
 
 export class HTMLMsaUtilsMoverElement extends HTMLElement {}
-MsaUtils.HTMLMsaUtilsMoverElement = HTMLMsaUtilsMoverElement 
 const MsaUtilsMoverPt = HTMLMsaUtilsMoverElement.prototype
 
 MsaUtilsMoverPt.connectedCallback = function() {
-	this.initContent()
+	this.innerHTML = this.getTemplate()
 	this.setAttribute("msa-editor", true)
 	this.addEventListener("mousedown", evt => this.move(evt))
 	this.link(this.parentNode)
 }
 
-MsaUtilsMoverPt.initContent = function() {
-	this.innerHTML = content
+MsaUtilsMoverPt.getTemplate = function() {
+	return template
 }
 
 MsaUtilsMoverPt.disconnectedCallback = function() {
@@ -130,7 +126,7 @@ document.addEventListener("mousemove", function(evt){
 
 
 
-// various ///////////////////////////////////////////////
+// utils ///////////////////////////////////////////////
 
 const isSize = function(size) {
 	return size.search(/^[0-9.]+[px%]+$/)!=-1
@@ -174,4 +170,3 @@ export function makeMovable(target, movable) {
 	}
 	return mover
 }
-MsaUtils.makeMovable = makeMovable

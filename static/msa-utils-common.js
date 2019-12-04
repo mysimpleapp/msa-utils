@@ -1,26 +1,20 @@
-if(!window.MsaUtils) MsaUtils = window.MsaUtils = {}
-
 // events
 
 export function trigger(el, evt) {
 	el.dispatchEvent(new Event(evt))
 }
-MsaUtils.trigger = trigger
 
 // size
 
 export function isSize(size) {
 	return size.search(/^[0-9.]+[px%]+$/)!=-1
 }
-MsaUtils.isSIze = isSize
 export function getSizeVal(size) {
 	return size.match(/^[0-9.]*/)[0]
 }
-MsaUtils.getSizeVal = getSizeVal
 export function getSizeUnit(size) {
 	return size.match(/[a-z%]*$/)[0]
 }
-MsaUtils.getSizeUnit = getSizeUnit
 
 // backup & restore
 
@@ -74,7 +68,6 @@ export function backup(target, args) {
 		}
 	}
 }
-MsaUtils.backup = backup
 
 export function restore(target, args) {
 	// default args
@@ -121,7 +114,6 @@ export function restore(target, args) {
 	if(clean) delete target[key]
 	return true
 }
-MsaUtils.restore = restore
 
 // various
 

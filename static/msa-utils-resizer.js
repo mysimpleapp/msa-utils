@@ -1,8 +1,6 @@
 import { importHtml } from "/msa/msa.js"
 import { backup, restore } from "/utils/msa-utils-common.js"
 
-if(!window.MsaUtils) MsaUtils = window.MsaUtils = {}
-
 importHtml(`<style>
 	msa-utils-resizer-handle {
 		display: box;
@@ -18,9 +16,6 @@ importHtml(`<style>
 		opacity: 1;
 	}
 </style>`)
-
-const content = `
-	<div class="area"></div>̀̀̀`
 
 var _ResizingResizer = null, _ResizingHandle = null
 
@@ -385,7 +380,6 @@ export function makeResizable(target, resizable, args) {
 		args)
 	return resizer
 }
-MsaUtils.makeResizable = makeResizable
 
 
 // various ///////////////////////////////////////////////

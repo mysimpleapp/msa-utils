@@ -2,8 +2,6 @@ import { importHtml, Q } from "/msa/msa.js"
 import { isSize, getSizeVal, getSizeUnit, trigger, backup, restore } from "/utils/msa-utils-common.js"
 import { addPopup } from "/utils/msa-utils-popup.js"
 
-if(!window.MsaUtils) MsaUtils = window.MsaUtils = {}
-
 // SVGs
 importHtml(`<svg id="msa-utils-flex-item-menu-svg" style="display:none">
 	<!-- width full -->
@@ -143,8 +141,9 @@ importHtml(`<style>
 	}
 </style>`)
 
-// content
-const content = `
+// template
+
+const template = `
 	<!-- block position -->
 	<div class="block position">
 		<div class="title">Position</div>
@@ -285,16 +284,6 @@ const content = `
 		</div>
 	</div>`
 
-const sizeChangerContent = `
-	<input class="act" type="checkbox">
-	<input class="val" type="number" min="0" step="10">
-	<select class="unit">
-		<option>px</option>
-		<option>%</option>
-		<option>rem</option>
-	</select>
-	<select class="attr"></select>`
-
 
 // msa-utils-flex-item-menu //////////////////////////////////////
 
@@ -302,7 +291,7 @@ export class HTMLMsaUtilsFlexItemMenuElement extends HTMLElement {
 
 	connectedCallback(){
 		this.Q = Q
-		this.initContent()
+		this.innerHTML = this.getTemplate()
 		this.initActions()
 	}
 
@@ -310,8 +299,8 @@ export class HTMLMsaUtilsFlexItemMenuElement extends HTMLElement {
 		this.unlink()
 	}
 
-	initContent() {
-		this.innerHTML = content
+	getTemplate() {
+		return template
 	}
 
 	linkTo(target) {
@@ -669,8 +658,8 @@ export class HTMLMsaUtilsFlexItemMenuElement extends HTMLElement {
 	}
 }
 
-// register element
 customElements.define("msa-utils-flex-item-menu", HTMLMsaUtilsFlexItemMenuElement)
+
 
 // position
 export function setPositionInline(target) {
@@ -686,7 +675,6 @@ export function setPositionInline(target) {
 	backup(target, { key:"msaUtilsPosition", style:["left", "right", "top", "bottom"] })
 	trigger(target, "move")
 }
-MsaUtils.setPositionInline = setPositionInline
 
 export function setPositionFloat(target) {
 	// update target position
@@ -703,7 +691,6 @@ export function setPositionFloat(target) {
 	if(!isSize(ySize)) target.style.top = "0px"
 	trigger(target, "move")
 }
-MsaUtils.setPositionFloat = setPositionFloat
 
 // popup ///////////////////////////////////
 
@@ -713,21 +700,19 @@ export function popupFlexItemMenuFor(target) {
 	var menu = target.msaUtilsFlexItemMenu
 	if(!menu) {
 		menu = addPopup(target, "msa-utils-flex-item-menu", {
-			onCancel: () => this.restoreStyle(),
 			buttons: [
-				{ text:"OK" },
-				{ text:"Cancel", act:"cancel" }
+				{ text:"OK", fun:function(){ this.remove() } },
+				{ text:"Cancel", fun:function(){ this.cancel() } }
 			]
 		})
+		menu.addEventListener("cancel", () => this.restoreStyle())
 		menu.linkTo(target)
 	}
 	return menu
 }
-MsaUtils.popupFlexItemMenuFor = popupFlexItemMenuFor
 
 
-// various /////////////////////////////////
-
+// utils /////////////////////////////////
 
 function update(obj, key, val) {
 	var oldVal = obj[key]
@@ -751,4 +736,3 @@ function getAssociatedComputedStyleAttr(attr) {
 	if(attr==="minHeight") attr = "height"
 	return attr
 }
-

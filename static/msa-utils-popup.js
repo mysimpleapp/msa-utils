@@ -2,8 +2,6 @@ import { Q, importHtml, importOnCall } from "/msa/msa.js"
 
 const makeMovable = importOnCall("/utils/msa-utils-mover.js", "makeMovable")
 
-if(!window.MsaUtils) MsaUtils = window.MsaUtils = {}
-
 // SVGs
 importHtml(`<svg id="msa-utils-popup-svg" style="display:none">
 	<!-- close icon -->
@@ -56,7 +54,7 @@ importHtml(`<style>
 	}
 </style>̀`)
 
-// popup /////////////////////////////////
+// msa-utils-popup /////////////////////////////////
 
 const popupTemplate = `
 <div style="display:flex; flex-direction:row">
@@ -134,11 +132,22 @@ export class HTMLMsaUtilsPopupElement extends HTMLElement {
 	initButtons(){
 		const buttons = this.getButtons()
 		if(buttons){
-			const buttonsEl = this.Q(".buttons")
-			buttonsEl.style.display = ""
-			for(const b in buttons)
-				buttonsEl.appendChild(buttons[b])
+			this.Q(".buttons").style.display = ""
+			for(const b of buttons)
+				this.addButton(b)
 		}
+	}
+	addButton(but){
+		let butEl
+		if(but instanceof HTMLElement) {
+			butEl = but
+		} else {
+			butEl = document.createElement("button")
+			butEl.textContent = but.text
+			if(but.fun)
+				butEl.addEventListener("click", () => but.fun.call(this))
+		}
+		this.Q(".buttons").appendChild(butEl)
 	}
 
 	addCloseIcon(){
@@ -165,7 +174,6 @@ export class HTMLMsaUtilsPopupElement extends HTMLElement {
 		this.remove()
 	}
 }
-MsaUtils.HTMLMsaUtilsPopupElement = HTMLMsaUtilsPopupElement
 HTMLMsaUtilsPopupElement.prototype.Q = Q
 
 customElements.define("msa-utils-popup", HTMLMsaUtilsPopupElement)
@@ -198,7 +206,6 @@ export function addPopup(parent, dom, kwargs) {
 	parent.appendChild(popup)
 	return popup
 }
-MsaUtils.addPopup = addPopup
 
 
 export async function importAsPopup(parent, html, kwargs) {
@@ -207,10 +214,9 @@ export async function importAsPopup(parent, html, kwargs) {
 	}
 	return addPopup(parent, html, kwargs)
 }
-MsaUtils.importAsPopup = importAsPopup
 
 
-// message /////////////////////////////////
+// msa-utils-popup-message /////////////////////////////////
 
 export class HTMLMsaUtilsPopupMessageElement extends HTMLMsaUtilsPopupElement {
 	getButtons(){
@@ -221,7 +227,6 @@ export class HTMLMsaUtilsPopupMessageElement extends HTMLMsaUtilsPopupElement {
 		return [okBut]
 	}
 }
-MsaUtils.HTMLMsaUtilsPopupMessageElement = HTMLMsaUtilsPopupMessageElement
 
 customElements.define("msa-utils-popup-message", HTMLMsaUtilsPopupMessageElement)
 
@@ -232,17 +237,15 @@ export function addMessagePopup(parent, dom, kwargs) {
 	popup.Q("button.ok").focus()
 	return popup
 }
-MsaUtils.addMessagePopup = addMessagePopup
 
 
 export function addErrorPopup(parent, dom, kwargs) {
 	return addMessagePopup(parent, dom,
 		{ "icon":"/utils/img/error" , ...kwargs })
 }
-MsaUtils.addErrorPopup = addErrorPopup
 
 
-// confirm /////////////////////////////////
+// msa-utils-popup-confirm /////////////////////////////////
 
 export class HTMLMsaUtilsPopupConfirmElement extends HTMLMsaUtilsPopupElement {
 	getButtons(){
@@ -261,7 +264,6 @@ export class HTMLMsaUtilsPopupConfirmElement extends HTMLMsaUtilsPopupElement {
 		this.remove()
 	}
 }
-MsaUtils.HTMLMsaUtilsPopupConfirmElement = HTMLMsaUtilsPopupConfirmElement
 
 customElements.define("msa-utils-popup-confirm", HTMLMsaUtilsPopupConfirmElement)
 
@@ -273,10 +275,9 @@ export function addConfirmPopup(parent, dom, onConfirm, kwargs) {
 	if(onConfirm) popup.addEventListerner("confirm", onConfirm)
 	return popup
 }
-MsaUtils.addConfirmPopup = addConfirmPopup
 
 
-// input /////////////////////////////////
+// msa-utils-popup-input /////////////////////////////////
 
 export class HTMLMsaUtilsPopupInputElement extends HTMLMsaUtilsPopupElement {
 	getContent(){
@@ -312,7 +313,6 @@ export class HTMLMsaUtilsPopupInputElement extends HTMLMsaUtilsPopupElement {
 		this.remove()
 	}
 }
-MsaUtils.HTMLMsaUtilsPopupInputElement = HTMLMsaUtilsPopupInputElement
 
 customElements.define("msa-utils-popup-input", HTMLMsaUtilsPopupInputElement)
 
@@ -335,7 +335,6 @@ export function addInputPopup(parent, text, arg1, arg2) {
 	popup.Q("input").focus()
 	return popup
 }
-MsaUtils.addInputPopup = addInputPopup
 
 
 // utils /////////////////////////////
