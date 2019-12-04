@@ -272,7 +272,10 @@ export function addConfirmPopup(parent, dom, onConfirm, kwargs) {
 	const popup = addPopup(parent, dom,
 		{ "popupTagName":"msa-utils-popup-confirm" , ...kwargs })
 	popup.Q("button.no").focus()
-	if(onConfirm) popup.addEventListerner("confirm", onConfirm)
+	popup.then = next => {
+		popup.addEventListener("confirm", next)
+		return popup
+	}
 	return popup
 }
 
@@ -317,9 +320,7 @@ export class HTMLMsaUtilsPopupInputElement extends HTMLMsaUtilsPopupElement {
 customElements.define("msa-utils-popup-input", HTMLMsaUtilsPopupInputElement)
 
 
-export function addInputPopup(parent, text, arg1, arg2) {
-	if(typeof arg1 === "function") var onValidate=arg1
-	else var kwargs=arg1, onValidate=arg2
+export function addInputPopup(parent, text, kwargs) {
 	const popup = _createPopup(null,
 		{ "popupTagName":"msa-utils-popup-input" , ...kwargs })
 	popup.getText = () => text
@@ -327,12 +328,12 @@ export function addInputPopup(parent, text, arg1, arg2) {
 		popup.setAttribute("type", kwargs.type)
 	if(kwargs && kwargs.value != undefined)
 		popup.setAttribute("value", kwargs.value)
-	if(onValidate)
-		popup.addEventListener("validate", evt => {
-			onValidate(evt.detail)
-		})
 	parent.appendChild(popup)
 	popup.Q("input").focus()
+	popup.then = next => {
+		popup.addEventListener("validate", evt => next(evt.detail))
+		return popup
+	}
 	return popup
 }
 
