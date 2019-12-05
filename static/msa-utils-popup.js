@@ -293,7 +293,7 @@ export function addConfirmPopup(parent, dom, kwargs) {
 export class HTMLMsaUtilsPopupInputElement extends HTMLMsaUtilsPopupElement {
 	getContent(){
 		const inputType = this.getAttribute("type") || "text"
-		inputEl = document.createElement("input")
+		const inputEl = document.createElement("input")
 		inputEl.type = inputType
 		if(inputType==="text")
 			inputEl.onkeydown = evt => {
