@@ -1,3 +1,12 @@
+export function importOnCall(src, fun) {
+	return async function(...args) {
+		const mod = await import(src)
+		return mod[fun](...args)
+	}
+}
+
+const addErrorPopup = importOnCall("/utils/msa-utils-popup.js", "addErrorPopup")
+
 // method for cached query in dom
 export function Q(query) {
 	var qels = this._Qels
@@ -34,6 +43,7 @@ export function ajax(method, url, arg1, arg2) {
 	const headers = args && ( args.headers || args.header )
 	const loadingDom = args && args.loadingDom
 	xhr.parseRes = args && args.parseRes
+	xhr.popupError = args && args.popupError
 	if(args)
 		for(let evt in args)
 			if(evt.substring(0, 2)==="on")
@@ -43,8 +53,6 @@ export function ajax(method, url, arg1, arg2) {
 		console.warn("DEPRECATED way of using Msa.ajax !\n"+(new Error().stack))
 		xhr.onsuccess = onsuccess
 	}
-	// default onload
-//	if(!xhr.onload) xhr.onload = _ajax_defaultOnload
 	// url (with query)
 	if(query) url = formatUrl(url, query)
 	xhr.open(method, url, true)
@@ -78,22 +86,24 @@ export function ajax(method, url, arg1, arg2) {
 			const xhr = evt.target, status = xhr.status
 			if(status>=200 && status<300)
 				_ajax_parseRes(evt, ok)
-			if(status>=400)
-				_ajax_parseRes(evt, ko)
+			if(status>=400){
+				let _ko = ko
+				let popupError = xhr.popupError
+				if(popupError){
+					if(popupError===true) popupError=document.body
+					_ko = (res, evt) => {
+						addErrorPopup(popupError, res)
+						ko(res, evt)
+					}
+				}
+				_ajax_parseRes(evt, _ko)
+			}
 		}
 	})
 	if(xhr.onsuccess) prm.then(xhr.onsuccess)
 	return prm
 }
-/*
-const _ajax_defaultOnload = function(evt, ok, ko) {
-	var xhr = evt.target, status = xhr.status
-	if(status>=200 && status<300)
-		_ajax_parseRes(evt, ok)
-	if(status>=400)
-		_ajax_parseRes(evt, ko)
-}
-*/
+
 const _ajax_parseRes = function(evt, next){
 	if(!next) return
 	var xhr = evt.target
@@ -335,13 +345,6 @@ export function importHtml(html, el) {
 			.then(() => ok(newEls))
 			.catch(ko)
 	})
-}
-
-export function importOnCall(src, fun) {
-	return async function(...args) {
-		const mod = await import(src)
-		return mod[fun](...args)
-	}
 }
 
 
