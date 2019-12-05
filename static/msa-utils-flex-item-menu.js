@@ -1,4 +1,4 @@
-import { importHtml, Q } from "/msa/msa.js"
+import { importHtml, Q } from "/utils/msa-utils.js"
 import { isSize, getSizeVal, getSizeUnit, trigger, backup, restore } from "/utils/msa-utils-common.js"
 import { addPopup } from "/utils/msa-utils-popup.js"
 

@@ -3,6 +3,9 @@
   "version": "0.1.2",
   "description": "MySimpleApp module offering some utilities to other modules",
   "main": "index.js",
+  "dependencies": {
+    "htmlparser2": "^3.9.2"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

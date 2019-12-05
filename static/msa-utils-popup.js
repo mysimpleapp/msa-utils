@@ -1,4 +1,4 @@
-import { Q, importHtml, importOnCall } from "/msa/msa.js"
+import { Q, importHtml, importOnCall } from "/utils/msa-utils.js"
 
 const makeMovable = importOnCall("/utils/msa-utils-mover.js", "makeMovable")
 
@@ -280,7 +280,7 @@ export class HTMLMsaUtilsPopupConfirmElement extends HTMLMsaUtilsPopupElement {
 customElements.define("msa-utils-popup-confirm", HTMLMsaUtilsPopupConfirmElement)
 
 
-export function addConfirmPopup(parent, dom, onConfirm, kwargs) {
+export function addConfirmPopup(parent, dom, kwargs) {
 	const popup = addPopup(parent, dom,
 		{ "popupTagName":"msa-utils-popup-confirm" , ...kwargs })
 	popup.Q("button.no").focus()
