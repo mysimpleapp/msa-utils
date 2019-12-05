@@ -271,6 +271,10 @@ export class HTMLMsaUtilsPopupConfirmElement extends HTMLMsaUtilsPopupElement {
 		this.dispatchEvent(new Event("confirm"))
 		this.remove()
 	}
+	then(next){
+		this.addEventListener("confirm", next)
+		return this
+	}
 }
 
 customElements.define("msa-utils-popup-confirm", HTMLMsaUtilsPopupConfirmElement)
@@ -280,10 +284,6 @@ export function addConfirmPopup(parent, dom, onConfirm, kwargs) {
 	const popup = addPopup(parent, dom,
 		{ "popupTagName":"msa-utils-popup-confirm" , ...kwargs })
 	popup.Q("button.no").focus()
-	popup.then = next => {
-		popup.addEventListener("confirm", next)
-		return popup
-	}
 	return popup
 }
 
@@ -309,18 +309,32 @@ export class HTMLMsaUtilsPopupInputElement extends HTMLMsaUtilsPopupElement {
 		else return input.value
 	}
 	getButtons(){
-		const yesBut = document.createElement("button")
-		yesBut.textContent = "OK"
-		yesBut.onclick = () => this.validate()
-		const noBut = document.createElement("button")
-		noBut.textContent = "Cancel"
-		noBut.onclick = () => this.cancel()
-		return [yesBut, noBut]
+		const okBut = document.createElement("button")
+		okBut.textContent = "OK"
+		okBut.classList.add("ok")
+		okBut.onclick = () => this.validate()
+		const cancelBut = document.createElement("button")
+		cancelBut.textContent = "Cancel"
+		cancelBut.onclick = () => this.cancel()
+		return [okBut, cancelBut]
 	}
 	validate(){
 		const val = this.getValue()
 		this.dispatchEvent(new CustomEvent("validate", { detail: val }))
 		this.remove()
+	}
+	setValidIf(validIf){
+		const okBut = this.Q("button.ok")
+		okBut.setAttribute("disabled","true")
+		this.content.oninput = () => {
+			const valid = validIf(this.getValue())
+			if(valid) okBut.removeAttribute("disabled")
+			else okBut.setAttribute("disabled","true")
+		}
+	}
+	then(next){
+		this.addEventListener("validate", evt => next(evt.detail))
+		return this
 	}
 }
 
@@ -338,11 +352,9 @@ export function addInputPopup(parent, text, kwargs) {
 	if(kwargs && kwargs.input)
 		popup.getContent = () => kwargs.input
 	parent.appendChild(popup)
+	if(kwargs && kwargs.validIf)
+		popup.setValidIf(kwargs.validIf)
 	popup.content.focus()
-	popup.then = next => {
-		popup.addEventListener("validate", evt => next(evt.detail))
-		return popup
-	}
 	return popup
 }
 
