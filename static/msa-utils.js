@@ -188,7 +188,7 @@ const _formatHtml_core = function(htmlExpr, head, body, isHead) {
 	var type = typeof htmlExpr
 	// case string
 	if(type==="string") {
-		_formatHtml_push(htmlExpr, head, body, isHead)
+		_formatHtml_push(htmlExpr.trim(), head, body, isHead)
 	} else if(type==="object") {
 		// case array
 		const len = htmlExpr.length
@@ -305,18 +305,30 @@ const _formatHtml_toUrl = function(url) {
 const ImportCache = {}
 
 export function importHtml(html, el) {
-//	const isHead = (typeof html !== "string" || el === undefined)
 	const isHead = el ? false : true
-	html = _formatHtml(html, isHead)
-	const head = html.head, body = html.body
+	let heads, bodys
+	if(html instanceof HTMLElement){
+		if(isHead) heads = [html]
+		else bodys = [html]
+	} else {
+		html = _formatHtml(html, isHead)
+		const headStr = html.head, bodyStr = html.body
+		if(headStr){
+			const headTemplate = document.createElement("template")
+			headTemplate.innerHTML = headStr
+			heads = headTemplate.content.children
+		}
+		if(bodyStr){
+			const bodyTemplate = document.createElement("template")
+			bodyTemplate.innerHTML = bodyStr
+			bodys = bodyTemplate.content.childNodes
+		}
+	}
 	const newEls = []
 	const loads = []
-	if(head) {
-		// parse input head content
-		const headTemplate = document.createElement("template")
-		headTemplate.innerHTML = head
+	if(heads) {
 		// for each inpu head element 
-		for(let h of headTemplate.content.children) {
+		for(let h of heads) {
 			// check if it is already in cache
 			const hHtml = h.outerHTML
 			let prm = ImportCache[hHtml]
@@ -332,10 +344,8 @@ export function importHtml(html, el) {
 			loads.push(prm)
 		}
 	}
-	if(body) {
-		const bodyTemplate = document.createElement("template")
-		bodyTemplate.innerHTML = body
-		for(let b of bodyTemplate.content.children) {
+	if(bodys) {
+		for(let b of bodys) {
 			newEls.push(b)
 			if(el !== true) el.appendChild(b)
 		}
