@@ -70,13 +70,13 @@ const popupTemplate = `
 
 export class HTMLMsaUtilsPopupElement extends HTMLElement {
 
-	connectedCallback(){
+	async connectedCallback(){
 		this.classList.add("msa-utils-popup")
 		this.innerHTML = this.getTemplate()
 		this.initIcon()
 		this.initTitle()
 		this.initText()
-		this.initContent()
+		await this.initContent()
 		this.initButtons()
 		if(this.getAttribute("close-icon") !== "false")
 			this.addCloseIcon()
@@ -89,12 +89,11 @@ export class HTMLMsaUtilsPopupElement extends HTMLElement {
 	}
 
 	getContent(){}
-	initContent(){
+	async initContent(){
 		const content = this.getContent()
 		if(content){
-			const contentEl = asDom(content)
-			this.Q(".content").appendChild(contentEl)
-			this.content = contentEl
+			const doms = await importHtml(content, this.Q(".content"))
+			this.content = doms[0]
 		}
 	}
 
@@ -257,6 +256,10 @@ export function addErrorPopup(parent, dom, kwargs) {
 // msa-utils-popup-confirm /////////////////////////////////
 
 export class HTMLMsaUtilsPopupConfirmElement extends HTMLMsaUtilsPopupElement {
+	async connectedCallback(){
+		await super.connectedCallback()
+		this.Q("button.no").focus()
+	}
 	getButtons(){
 		const yesBut = document.createElement("button")
 		yesBut.textContent = "Yes"
@@ -281,16 +284,18 @@ customElements.define("msa-utils-popup-confirm", HTMLMsaUtilsPopupConfirmElement
 
 
 export function addConfirmPopup(parent, dom, kwargs) {
-	const popup = addPopup(parent, dom,
+	return addPopup(parent, dom,
 		{ "popupTagName":"msa-utils-popup-confirm" , ...kwargs })
-	popup.Q("button.no").focus()
-	return popup
 }
 
 
 // msa-utils-popup-input /////////////////////////////////
 
 export class HTMLMsaUtilsPopupInputElement extends HTMLMsaUtilsPopupElement {
+	async connectedCallback(){
+		await super.connectedCallback()
+		this.content.focus()
+	}
 	getContent(){
 		const inputType = this.getAttribute("type") || "text"
 		const inputEl = document.createElement("input")
@@ -344,17 +349,19 @@ customElements.define("msa-utils-popup-input", HTMLMsaUtilsPopupInputElement)
 export function addInputPopup(parent, text, kwargs) {
 	const popup = _createPopup(null,
 		{ "popupTagName":"msa-utils-popup-input" , ...kwargs })
-	popup.getText = () => text
+	if(typeof text === "string")
+		popup.getText = () => text
+	else
+		popup.getContent = () => text
 	if(kwargs && kwargs.type)
 		popup.setAttribute("type", kwargs.type)
 	if(kwargs && kwargs.value != undefined)
 		popup.setAttribute("value", kwargs.value)
 	if(kwargs && kwargs.input)
 		popup.getContent = () => kwargs.input
-	parent.appendChild(popup)
 	if(kwargs && kwargs.validIf)
 		popup.setValidIf(kwargs.validIf)
-	popup.content.focus()
+	parent.appendChild(popup)
 	return popup
 }
 
