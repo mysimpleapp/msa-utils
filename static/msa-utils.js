@@ -168,8 +168,135 @@ export function parseUrlArgs(str) {
 	return res
 }
 
-// formatHtml /////////////////////////////////////////////
+// expandHtmlExpr /////////////////////////////////////////////
 
+export function expandHtmlExpr(htmlExpr, isHead) {
+	if(isHead === undefined) isHead = true
+	const head = [], body = []
+	_expandHtmlExpr_core(htmlExpr, head, body, isHead)
+	return { head, body }
+}
+function _expandHtmlExpr_core(htmlExpr, head, body, isHead) {
+	var type = typeof htmlExpr
+	// case string
+	if(type==="string") {
+		_expandHtml_push(htmlExpr.trim(), head, body, isHead)
+	} else if(type==="object") {
+		// case array
+		const len = htmlExpr.length
+		if(len!==undefined) {
+			for(let i=0; i<len; ++i)
+			_expandHtmlExpr_core(htmlExpr[i], head, body, isHead)
+		// case object
+		} else {
+			var tag = htmlExpr.tag
+			var cnt = htmlExpr.content || htmlExpr.cnt
+			var attrs = htmlExpr.attributes || htmlExpr.attrs
+			var style = htmlExpr.style
+			var imp = htmlExpr.import
+			var mod = htmlExpr.module || htmlExpr.mod
+			var js = htmlExpr.script || htmlExpr.js
+			var css = htmlExpr.stylesheet || htmlExpr.css
+			var wel = htmlExpr.webelement || htmlExpr.wel
+			// web element
+			if(wel) {
+				const ext = wel.split(".").pop()
+				if(ext === "html"){
+					_expandHtmlExpr_core({ import:wel }, head, body, isHead)
+					tag = tag || /([a-zA-Z0-9-_]*)\.html$/.exec(wel)[1]
+				} else if(ext === "js"){
+					_expandHtmlExpr_core({ mod:wel }, head, body, isHead)
+					tag = tag || /([a-zA-Z0-9-_]*)\.js$/.exec(wel)[1]
+				}
+				isHead = false
+			}
+			// html import
+			if(imp && !tag) {
+				tag = 'link'
+				attrs = attrs || {}
+				attrs.rel = 'import'
+				attrs.href = imp
+				isHead = true
+			}
+			// js module
+			if(mod && !tag) {
+				tag = 'script'
+				attrs = attrs || {}
+				attrs.src = mod
+				attrs.type = 'module'
+				isHead = true
+			}
+			// script
+			if(js && !tag) {
+				tag = 'script'
+				attrs = attrs || {}
+				attrs.src = js
+				isHead = true
+			}
+			// stylesheet
+			if(css && !tag) {
+				tag = 'link'
+				attrs = attrs || {}
+				attrs.rel = 'stylesheet'
+				attrs.type = 'text/css'
+				attrs.href = css
+				isHead = true
+			}
+			// style
+			if(style) {
+				if(!attrs) attrs={}
+				attrs.style = style
+			}
+			// push
+			if(tag){
+				_expandHtml_push({ tag , attrs, cnt }, head, body, isHead)
+			}
+			// body
+			_expandHtmlExpr_core(htmlExpr.body, head, body, false)
+			// head
+			_expandHtmlExpr_core(htmlExpr.head, head, body, true)
+		}
+	}
+}
+
+function _expandHtml_push(html, head, body, isHead) {
+	if(isHead) head.push(html)
+	else body.push(html)
+}
+
+export function convertHtmlExpr(htmlExpr, isHead){
+	const { head, body } = expandHtmlExpr(htmlExpr, isHead)
+	return {
+		head: _convertHtmlExpr_core(head, true),
+		body: _convertHtmlExpr_core(body, false)
+	}
+}
+
+function _convertHtmlExpr_core(arr, isHead){
+	const res = []
+	for(const a of arr){
+		const t = typeof a
+		if(t === "string"){
+			const tmpl = document.createElement("template")
+			tmpl.innerHTML = a
+			for(const el of tmpl.content.childNodes)
+				if(!isHead || el.nodeType === Node.ELEMENT_NODE)
+					res.push(el)
+		} else if(t === "object"){
+			const el = document.createElement(a.tag)
+			const attrs = a.attrs
+			if(attrs) for(const k in attrs)
+				el.setAttribute(k, attrs[k])
+			const cnt = a.cnt
+			if(cnt) el.innerHTML = cnt
+			res.push(el)
+		}
+	}
+	return res
+}
+
+// formatHtml /////////////////////////////////////////////
+/*
 // format HTML expression to HTML object
 export function formatHtml(htmlExpr) {
 	return _formatHtml(htmlExpr, true)
@@ -267,7 +394,7 @@ const _formatHtml_core = function(htmlExpr, head, body, isHead) {
 					for(var a in attrs) {
 						var val = attrs[a]
 						if(a=='style') val = _formatHtml_style(val)
-						str += ' '+ a +'="'+ val +'"'
+						str += ' '+ a +'="'+ _formatHtml_str(val) +'"'
 					}
 				str += '>'
 				_formatHtml_push(str, head, body, isHead)
@@ -281,6 +408,11 @@ const _formatHtml_core = function(htmlExpr, head, body, isHead) {
 			_formatHtml_core(htmlExpr.head, head, body, true)
 		}
 	}
+}
+const _formatHtml_str = function(val) {
+	if(typeof val === "string")
+		return val.replace(/"/g,'\\"')
+	else return val
 }
 const _formatHtml_style = function(style) {
 	var type = typeof style
@@ -298,7 +430,7 @@ const _formatHtml_push = function(html, head, body, isHead) {
 const _formatHtml_toUrl = function(url) {
 	return url
 }
-
+*/
 // importHtml ///////////////////////////////////
 
 // cache of promises on any content imported into document head
@@ -311,18 +443,9 @@ export function importHtml(html, el) {
 		if(isHead) heads = [html]
 		else bodys = [html]
 	} else {
-		html = _formatHtml(html, isHead)
-		const headStr = html.head, bodyStr = html.body
-		if(headStr){
-			const headTemplate = document.createElement("template")
-			headTemplate.innerHTML = headStr
-			heads = headTemplate.content.children
-		}
-		if(bodyStr){
-			const bodyTemplate = document.createElement("template")
-			bodyTemplate.innerHTML = bodyStr
-			bodys = bodyTemplate.content.childNodes
-		}
+		const els = convertHtmlExpr(html, isHead)
+		heads = els.head
+		bodys = els.body
 	}
 	const newEls = []
 	const loads = []
