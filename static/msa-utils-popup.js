@@ -310,8 +310,7 @@ export class HTMLMsaUtilsPopupInputElement extends HTMLMsaUtilsPopupElement {
 	}
 	getValue(){
 		const input = this.content
-		if(input.getValue) return input.getValue()
-		else return input.value
+		return input.getValue ? input.getValue() : input.value
 	}
 	getButtons(){
 		const okBut = document.createElement("button")

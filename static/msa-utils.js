@@ -170,34 +170,38 @@ export function parseUrlArgs(str) {
 
 // expandHtmlExpr /////////////////////////////////////////////
 
-export function expandHtmlExpr(htmlExpr, isHead) {
+export function expandHtmlExpr(expr, isHead) {
 	if(isHead === undefined) isHead = true
 	const head = [], body = []
-	_expandHtmlExpr_core(htmlExpr, head, body, isHead)
+	_expandHtmlExpr_core(expr, head, body, isHead)
 	return { head, body }
 }
-function _expandHtmlExpr_core(htmlExpr, head, body, isHead) {
-	var type = typeof htmlExpr
-	// case string
-	if(type==="string") {
-		_expandHtml_push(htmlExpr.trim(), head, body, isHead)
-	} else if(type==="object") {
+function _expandHtmlExpr_core(expr, head, body, isHead){
+	if(!expr) return
+	if(expr instanceof HTMLElement)
+		// case HTML Element
+		return _expandHtml_push(expr, head, body, isHead)
+	var exprType = typeof expr
+	if(exprType==="string"){
+		// case string
+		_expandHtml_push(expr.trim(), head, body, isHead)
+	} else if(exprType==="object"){
 		// case array
-		const len = htmlExpr.length
+		const len = expr.length
 		if(len!==undefined) {
 			for(let i=0; i<len; ++i)
-			_expandHtmlExpr_core(htmlExpr[i], head, body, isHead)
+			_expandHtmlExpr_core(expr[i], head, body, isHead)
 		// case object
 		} else {
-			var tag = htmlExpr.tag
-			var cnt = htmlExpr.content || htmlExpr.cnt
-			var attrs = htmlExpr.attributes || htmlExpr.attrs
-			var style = htmlExpr.style
-			var imp = htmlExpr.import
-			var mod = htmlExpr.module || htmlExpr.mod
-			var js = htmlExpr.script || htmlExpr.js
-			var css = htmlExpr.stylesheet || htmlExpr.css
-			var wel = htmlExpr.webelement || htmlExpr.wel
+			var tag = expr.tag
+			var cnt = expr.content || expr.cnt
+			var attrs = expr.attributes || expr.attrs
+			var style = expr.style
+			var imp = expr.import
+			var mod = expr.module || expr.mod
+			var js = expr.script || expr.js
+			var css = expr.stylesheet || expr.css
+			var wel = expr.webelement || expr.wel
 			// web element
 			if(wel) {
 				const ext = wel.split(".").pop()
@@ -252,9 +256,9 @@ function _expandHtmlExpr_core(htmlExpr, head, body, isHead) {
 				_expandHtml_push({ tag , attrs, cnt }, head, body, isHead)
 			}
 			// body
-			_expandHtmlExpr_core(htmlExpr.body, head, body, false)
+			_expandHtmlExpr_core(expr.body, head, body, false)
 			// head
-			_expandHtmlExpr_core(htmlExpr.head, head, body, true)
+			_expandHtmlExpr_core(expr.head, head, body, true)
 		}
 	}
 }
@@ -282,6 +286,8 @@ function _convertHtmlExpr_core(arr, isHead){
 			for(const el of tmpl.content.childNodes)
 				if(!isHead || el.nodeType === Node.ELEMENT_NODE)
 					res.push(el)
+		} else if(a instanceof HTMLElement){
+			res.push(a)
 		} else if(t === "object"){
 			const el = document.createElement(a.tag)
 			const attrs = a.attrs
@@ -438,20 +444,12 @@ const ImportCache = {}
 
 export function importHtml(html, el) {
 	const isHead = el ? false : true
-	let heads, bodys
-	if(html instanceof HTMLElement){
-		if(isHead) heads = [html]
-		else bodys = [html]
-	} else {
-		const els = convertHtmlExpr(html, isHead)
-		heads = els.head
-		bodys = els.body
-	}
+	const { head, body } = convertHtmlExpr(html, isHead)
 	const newEls = []
 	const loads = []
-	if(heads) {
+	if(head) {
 		// for each inpu head element 
-		for(let h of heads) {
+		for(let h of head) {
 			// check if it is already in cache
 			const hHtml = h.outerHTML
 			let prm = ImportCache[hHtml]
@@ -467,8 +465,8 @@ export function importHtml(html, el) {
 			loads.push(prm)
 		}
 	}
-	if(bodys) {
-		for(let b of bodys) {
+	if(body) {
+		for(let b of body) {
 			newEls.push(b)
 			if(el !== true) el.appendChild(b)
 		}
