@@ -70,13 +70,13 @@ const popupTemplate = `
 
 export class HTMLMsaUtilsPopupElement extends HTMLElement {
 
-	async connectedCallback(){
+	connectedCallback(){
 		this.classList.add("msa-utils-popup")
 		this.innerHTML = this.getTemplate()
 		this.initIcon()
 		this.initTitle()
 		this.initText()
-		await this.initContent()
+		this.initContent()
 		this.initButtons()
 		if(this.getAttribute("close-icon") !== "false")
 			this.addCloseIcon()
@@ -89,11 +89,11 @@ export class HTMLMsaUtilsPopupElement extends HTMLElement {
 	}
 
 	getContent(){}
-	async initContent(){
-		const content = this.getContent()
-		if(content){
-			const doms = await importHtml(content, this.Q(".content"))
-			this.content = doms[0]
+	initContent(){
+		const content = asDom(this.getContent())
+		if(content) {
+			this.Q(".content").appendChild(content)
+			this.content = content
 		}
 	}
 
@@ -289,6 +289,14 @@ export function addConfirmPopup(parent, dom, kwargs) {
 }
 
 
+export async function importAsConfirmPopup(parent, html, kwargs) {
+	if(!(html instanceof HTMLElement)){
+		html = (await importHtml(html, true))[0]
+	}
+	return addConfirmPopup(parent, html, kwargs)
+}
+
+
 // msa-utils-popup-input /////////////////////////////////
 
 export class HTMLMsaUtilsPopupInputElement extends HTMLMsaUtilsPopupElement {
@@ -358,10 +366,18 @@ export function addInputPopup(parent, text, kwargs) {
 		popup.setAttribute("value", kwargs.value)
 	if(kwargs && kwargs.input)
 		popup.getContent = () => kwargs.input
+	parent.appendChild(popup)
 	if(kwargs && kwargs.validIf)
 		popup.setValidIf(kwargs.validIf)
-	parent.appendChild(popup)
 	return popup
+}
+
+
+export async function importAsInputPopup(parent, html, kwargs) {
+	if(!(html instanceof HTMLElement)){
+		html = (await importHtml(html, true))[0]
+	}
+	return addInputPopup(parent, html, kwargs)
 }
 
 

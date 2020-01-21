@@ -1,6 +1,6 @@
 {
   "name": "@mysimpleapp/msa-utils",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "MySimpleApp module offering some utilities to other modules",
   "main": "index.js",
   "dependencies": {
