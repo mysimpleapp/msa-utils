@@ -1,5 +1,5 @@
 import { importHtml, Q } from "/utils/msa-utils.js"
-import "/utils/msa-utils-generic-editor.js"
+import "/utils/msa-utils-dropdown-menu.js"
 import { addPopup, addInputPopup } from "/utils/msa-utils-popup.js"
 
 // SVGs
@@ -130,7 +130,7 @@ importHtml(`<style>
 </style>`)
 
 const content = `
-	<msa-utils-generic-editor>
+	<msa-utils-dropdown-menu>
 		<ul>
 			<li><svg><use xlink:href="#msa-utils-text-editor-pen"></use></svg>
 				<ul>
@@ -174,7 +174,7 @@ const content = `
 			<li><svg class="actShowAttachs"><use xlink:href="#msa-utils-text-editor-attach"></use></svg></li>
 			<li><svg class="actHtml"><use xlink:href="#msa-utils-text-editor-source"></use></svg></li>
 		</ul>
-	</msa-utils-generic-editor>`
+	</msa-utils-dropdown-menu>`
 
 // global input color
 const inputColor = document.createElement("input")

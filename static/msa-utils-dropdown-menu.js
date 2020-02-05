@@ -1,7 +1,7 @@
 import { importHtml } from "/utils/msa-utils.js"
 
 importHtml(`<style>
-	msa-utils-generic-editor ul {
+	msa-utils-dropdown-menu ul {
 		position: relative;
 		line-height: 0;
 		background-color: white;
@@ -11,28 +11,28 @@ importHtml(`<style>
 		display: inline-block;
 		white-space: nowrap;
 	}
-	msa-utils-generic-editor li {
+	msa-utils-dropdown-menu li {
 		display: inline-block;
 		cursor: pointer;
 	}
-	msa-utils-generic-editor ul li ul {
+	msa-utils-dropdown-menu ul li ul {
 		position: absolute;
 		top: 41px;
 		left: 0;
 		display: none;
 		min-width: 100%;
 	}
-	msa-utils-generic-editor ul li:hover > ul {
+	msa-utils-dropdown-menu ul li:hover > ul {
 		display: inline-block;
 	}
-	msa-utils-generic-editor li > *:first-child {
+	msa-utils-dropdown-menu li > *:first-child {
 		padding: 5px;
 		margin: 3px;
 		outline: 0;
 		width: 24px;
 		height: 24px;
 	}
-	msa-utils-generic-editor li:hover > *:first-child {
+	msa-utils-dropdown-menu li:hover > *:first-child {
 		box-shadow: 1pt 1pt 3pt 1pt #aaa;
 		border-radius: 3pt;
 		background: #eee;
