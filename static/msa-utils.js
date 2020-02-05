@@ -1,5 +1,5 @@
 export function importOnCall(src, fun) {
-	return async function(...args) {
+	return async function (...args) {
 		const mod = await import(src)
 		return mod[fun](...args)
 	}
@@ -10,10 +10,10 @@ const addErrorPopup = importOnCall("/utils/msa-utils-popup.js", "addErrorPopup")
 // method for cached query in dom
 export function Q(query) {
 	var qels = this._Qels
-	if(qels===undefined)
+	if (qels === undefined)
 		qels = this._Qels = {}
 	var el = qels[query]
-	if(el===undefined)
+	if (el === undefined)
 		el = qels[query] = this.querySelector(query)
 	return el
 }
@@ -21,10 +21,10 @@ export function Q(query) {
 // method for cached query in shadow dom
 export function S(query) {
 	var sels = this._Sels
-	if(sels===undefined)
+	if (sels === undefined)
 		sels = this._Sels = {}
 	var el = sels[query]
-	if(el===undefined)
+	if (el === undefined)
 		el = sels[query] = this.shadowRoot.querySelector(query)
 	return el
 }
@@ -33,64 +33,64 @@ export function S(query) {
 // ajax //////////////////////////////////////////////
 
 export function ajax(method, url, arg1, arg2) {
-	if(typeof arg1==="function") var onsuccess=arg1
-	else var args=arg1, onsuccess=arg2
+	if (typeof arg1 === "function") var onsuccess = arg1
+	else var args = arg1, onsuccess = arg2
 	// build & send XMLHttpRequest
 	const xhr = new XMLHttpRequest()
 	// args
 	const query = args && args.query
 	let body = args && args.body
-	const headers = args && ( args.headers || args.header )
+	const headers = args && (args.headers || args.header)
 	const loadingDom = args && args.loadingDom
 	xhr.parseRes = args && args.parseRes
 	xhr.popupError = args && args.popupError
-	if(args)
-		for(let evt in args)
-			if(evt.substring(0, 2)==="on")
+	if (args)
+		for (let evt in args)
+			if (evt.substring(0, 2) === "on")
 				xhr[evt] = args[evt]
 	// onsuccess (deprecated)
-	if(onsuccess) {
-		console.warn("DEPRECATED way of using Msa.ajax !\n"+(new Error().stack))
+	if (onsuccess) {
+		console.warn("DEPRECATED way of using Msa.ajax !\n" + (new Error().stack))
 		xhr.onsuccess = onsuccess
 	}
 	// url (with query)
-	if(query) url = formatUrl(url, query)
+	if (query) url = formatUrl(url, query)
 	xhr.open(method, url, true)
 	// body
-	if(body) {
+	if (body) {
 		// body format
 		let contentType = args.contentType
-		if(contentType===undefined){
-			contentType = (typeof body==="object") ? 'application/json' : 'text/plain'
+		if (contentType === undefined) {
+			contentType = (typeof body === "object") ? 'application/json' : 'text/plain'
 		}
-		if(contentType) xhr.setRequestHeader('Content-Type', contentType)
+		if (contentType) xhr.setRequestHeader('Content-Type', contentType)
 		// format 
-		if(contentType==='application/json')
+		if (contentType === 'application/json')
 			body = JSON.stringify(body)
 	}
 	// header
-	if(headers)
-		for(var h in headers)
+	if (headers)
+		for (var h in headers)
 			xhr.setRequestHeader(h, headers[h])
 	// send request
 	xhr.send(body)
 	// loader
-	if(loadingDom) {
+	if (loadingDom) {
 		initLoader()
 		loadingDom.classList.add("msa-loading")
 	}
 	// output promise
 	const prm = new Promise((ok, ko) => {
 		xhr.onload = evt => {
-			if(loadingDom) loadingDom.classList.remove("msa-loading")
+			if (loadingDom) loadingDom.classList.remove("msa-loading")
 			const xhr = evt.target, status = xhr.status
-			if(status>=200 && status<300)
+			if (status >= 200 && status < 300)
 				_ajax_parseRes(evt, ok)
-			if(status>=400){
+			if (status >= 400) {
 				let _ko = ko
 				let popupError = xhr.popupError
-				if(popupError){
-					if(popupError===true) popupError=document.body
+				if (popupError) {
+					if (popupError === true) popupError = document.body
 					_ko = (res, evt) => {
 						addErrorPopup(popupError, res)
 						ko(res, evt)
@@ -100,20 +100,20 @@ export function ajax(method, url, arg1, arg2) {
 			}
 		}
 	})
-	if(xhr.onsuccess) prm.then(xhr.onsuccess)
+	if (xhr.onsuccess) prm.then(xhr.onsuccess)
 	return prm
 }
 
-const _ajax_parseRes = function(evt, next){
-	if(!next) return
+const _ajax_parseRes = function (evt, next) {
+	if (!next) return
 	var xhr = evt.target
 	var parseRes = (xhr.parseRes !== false)
 	var type = xhr.getResponseHeader('content-type').split(';')[0]
-	if(parseRes && type==='application/json'){
+	if (parseRes && type === 'application/json') {
 		var res = xhr.responseText
 		var json = res ? JSON.parse(res) : null
 		next(json, evt)
-	} else if(parseRes && type==='application/xml'){
+	} else if (parseRes && type === 'application/xml') {
 		next(xhr.responseXML, evt)
 	} else {
 		next(xhr.responseText, evt)
@@ -124,21 +124,21 @@ const _ajax_parseRes = function(evt, next){
 
 export function formatUrl(arg1, arg2) {
 	// get base from location, if not provided
-	if(arg2!==undefined) var base = arg1, args = arg2
+	if (arg2 !== undefined) var base = arg1, args = arg2
 	else var args = arg1, loc = window.location, base = loc.origin + loc.pathname
 	// add args, if provided
 	var res = base
-	if(args) {
+	if (args) {
 		var urlArgs = formatUrlArgs(args)
-		if(urlArgs) res += '?' + formatUrlArgs(args)
+		if (urlArgs) res += '?' + formatUrlArgs(args)
 	}
 	return res
 }
 export function formatUrlArgs(args) {
 	var res = []
-	for(var a in args) {
+	for (var a in args) {
 		var val = args[a]
-		if(val!==null && val!=="")
+		if (val !== null && val !== "")
 			res.push(encodeURIComponent(a) + "=" + encodeURIComponent(args[a]))
 	}
 	return res.join("&")
@@ -146,23 +146,23 @@ export function formatUrlArgs(args) {
 
 export function parseUrl(str) {
 	// get string from location, if not provided
-	if(str===undefined) str = window.location.href
-	var res = { base:null, args:null }
+	if (str === undefined) str = window.location.href
+	var res = { base: null, args: null }
 	var pair = str.split('?')
 	res.base = pair[0]
 	var argsStr = pair[1]
-	if(argsStr!==undefined)
+	if (argsStr !== undefined)
 		res.args = parseUrlArgs(argsStr)
 	return res
 }
 export function parseUrlArgs(str) {
 	// get string from location, if not provided
-	if(str===undefined) str = window.location.search.substring(1)
+	if (str === undefined) str = window.location.search.substring(1)
 	// parse args
 	var res = {}
-	str.split("&").forEach(function(keyVal){
+	str.split("&").forEach(function (keyVal) {
 		var pair = keyVal.split('=')
-		if(pair.length==2)
+		if (pair.length == 2)
 			res[decodeURIComponent(pair[0])] = decodeURIComponent(pair[1])
 	})
 	return res
@@ -171,27 +171,27 @@ export function parseUrlArgs(str) {
 // expandHtmlExpr /////////////////////////////////////////////
 
 export function expandHtmlExpr(expr, isHead) {
-	if(isHead === undefined) isHead = true
+	if (isHead === undefined) isHead = true
 	const head = [], body = []
 	_expandHtmlExpr_core(expr, head, body, isHead)
 	return { head, body }
 }
-function _expandHtmlExpr_core(expr, head, body, isHead){
-	if(!expr) return
-	if(expr instanceof HTMLElement)
+function _expandHtmlExpr_core(expr, head, body, isHead) {
+	if (!expr) return
+	if (expr instanceof HTMLElement)
 		// case HTML Element
 		return _expandHtml_push(expr, head, body, isHead)
 	var exprType = typeof expr
-	if(exprType==="string"){
+	if (exprType === "string") {
 		// case string
 		_expandHtml_push(expr.trim(), head, body, isHead)
-	} else if(exprType==="object"){
+	} else if (exprType === "object") {
 		// case array
 		const len = expr.length
-		if(len!==undefined) {
-			for(let i=0; i<len; ++i)
-			_expandHtmlExpr_core(expr[i], head, body, isHead)
-		// case object
+		if (len !== undefined) {
+			for (let i = 0; i < len; ++i)
+				_expandHtmlExpr_core(expr[i], head, body, isHead)
+			// case object
 		} else {
 			var tag = expr.tag
 			var cnt = expr.content || expr.cnt
@@ -203,19 +203,19 @@ function _expandHtmlExpr_core(expr, head, body, isHead){
 			var css = expr.stylesheet || expr.css
 			var wel = expr.webelement || expr.wel
 			// web element
-			if(wel) {
+			if (wel) {
 				const ext = wel.split(".").pop()
-				if(ext === "html"){
-					_expandHtmlExpr_core({ import:wel }, head, body, isHead)
+				if (ext === "html") {
+					_expandHtmlExpr_core({ import: wel }, head, body, isHead)
 					tag = tag || /([a-zA-Z0-9-_]*)\.html$/.exec(wel)[1]
-				} else if(ext === "js"){
-					_expandHtmlExpr_core({ mod:wel }, head, body, isHead)
+				} else if (ext === "js") {
+					_expandHtmlExpr_core({ mod: wel }, head, body, isHead)
 					tag = tag || /([a-zA-Z0-9-_]*)\.js$/.exec(wel)[1]
 				}
 				isHead = false
 			}
 			// html import
-			if(imp && !tag) {
+			if (imp && !tag) {
 				tag = 'link'
 				attrs = attrs || {}
 				attrs.rel = 'import'
@@ -223,7 +223,7 @@ function _expandHtmlExpr_core(expr, head, body, isHead){
 				isHead = true
 			}
 			// js module
-			if(mod && !tag) {
+			if (mod && !tag) {
 				tag = 'script'
 				attrs = attrs || {}
 				attrs.src = mod
@@ -231,14 +231,14 @@ function _expandHtmlExpr_core(expr, head, body, isHead){
 				isHead = true
 			}
 			// script
-			if(js && !tag) {
+			if (js && !tag) {
 				tag = 'script'
 				attrs = attrs || {}
 				attrs.src = js
 				isHead = true
 			}
 			// stylesheet
-			if(css && !tag) {
+			if (css && !tag) {
 				tag = 'link'
 				attrs = attrs || {}
 				attrs.rel = 'stylesheet'
@@ -247,13 +247,13 @@ function _expandHtmlExpr_core(expr, head, body, isHead){
 				isHead = true
 			}
 			// style
-			if(style) {
-				if(!attrs) attrs={}
+			if (style) {
+				if (!attrs) attrs = {}
 				attrs.style = style
 			}
 			// push
-			if(tag){
-				_expandHtml_push({ tag , attrs, cnt }, head, body, isHead)
+			if (tag) {
+				_expandHtml_push({ tag, attrs, cnt }, head, body, isHead)
 			}
 			// body
 			_expandHtmlExpr_core(expr.body, head, body, false)
@@ -264,11 +264,11 @@ function _expandHtmlExpr_core(expr, head, body, isHead){
 }
 
 function _expandHtml_push(html, head, body, isHead) {
-	if(isHead) head.push(html)
+	if (isHead) head.push(html)
 	else body.push(html)
 }
 
-export function convertHtmlExpr(htmlExpr, isHead){
+export function convertHtmlExpr(htmlExpr, isHead) {
 	const { head, body } = expandHtmlExpr(htmlExpr, isHead)
 	return {
 		head: _convertHtmlExpr_core(head, true),
@@ -276,25 +276,25 @@ export function convertHtmlExpr(htmlExpr, isHead){
 	}
 }
 
-function _convertHtmlExpr_core(arr, isHead){
+function _convertHtmlExpr_core(arr, isHead) {
 	const res = []
-	for(const a of arr){
+	for (const a of arr) {
 		const t = typeof a
-		if(t === "string"){
+		if (t === "string") {
 			const tmpl = document.createElement("template")
 			tmpl.innerHTML = a
-			for(const el of tmpl.content.childNodes)
-				if(!isHead || el.nodeType === Node.ELEMENT_NODE)
+			for (const el of tmpl.content.childNodes)
+				if (!isHead || el.nodeType === Node.ELEMENT_NODE)
 					res.push(el)
-		} else if(a instanceof HTMLElement){
+		} else if (a instanceof HTMLElement) {
 			res.push(a)
-		} else if(t === "object"){
+		} else if (t === "object") {
 			const el = document.createElement(a.tag)
 			const attrs = a.attrs
-			if(attrs) for(const k in attrs)
+			if (attrs) for (const k in attrs)
 				el.setAttribute(k, attrs[k])
 			const cnt = a.cnt
-			if(cnt) el.innerHTML = cnt
+			if (cnt) el.innerHTML = cnt
 			res.push(el)
 		}
 	}
@@ -447,13 +447,13 @@ export function importHtml(html, el) {
 	const { head, body } = convertHtmlExpr(html, isHead)
 	const newEls = []
 	const loads = []
-	if(head) {
+	if (head) {
 		// for each inpu head element 
-		for(let h of head) {
+		for (let h of head) {
 			// check if it is already in cache
 			const hHtml = h.outerHTML
 			let prm = ImportCache[hHtml]
-			if(!prm) {
+			if (!prm) {
 				// create promise to load input head
 				const h2 = cloneEl(h) // hack to force scripts to load
 				prm = ImportCache[hHtml] = new Promise((ok, ko) => {
@@ -465,10 +465,10 @@ export function importHtml(html, el) {
 			loads.push(prm)
 		}
 	}
-	if(body) {
-		for(let b of body) {
+	if (body) {
+		for (let b of body) {
 			newEls.push(b)
-			if(el !== true) el.appendChild(b)
+			if (el instanceof HTMLElement) el.appendChild(b)
 		}
 	}
 	return new Promise((ok, ko) => {
@@ -530,8 +530,8 @@ export function setLoaderHtml(html) {
 	loaderHtml = html
 }
 
-function initLoader(){
-	if(loaderInitialised) return
+function initLoader() {
+	if (loaderInitialised) return
 	loaderInitialised = true
 	importHtml(loaderHtml)
 }
@@ -540,7 +540,7 @@ function initLoader(){
 
 function cloneEl(el) {
 	const el2 = document.createElement(el.tagName)
-	for(let att of el.attributes)
+	for (let att of el.attributes)
 		el2.setAttribute(att.name, att.value)
 	el2.innerHTML = el.innerHTML
 	return el2
@@ -548,8 +548,8 @@ function cloneEl(el) {
 
 function join(cont, delim) {
 	let res = "", first = true
-	for(var c of cont) {
-		if(first) first = false
+	for (var c of cont) {
+		if (first) first = false
 		else res += delim
 		res += c
 	}
