@@ -212,6 +212,7 @@ export class HTMLMsaSheetTextEditor extends HTMLElement {
 		if (target) this.target = target
 		if (!this.target || !this.parentNode) return
 		this.target.setAttribute("contenteditable", "true")
+		this.target.focus()
 	}
 
 	connectedCallback() {
