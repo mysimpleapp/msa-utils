@@ -176,6 +176,7 @@ const content = `
 		</ul>
 	</msa-utils-dropdown-menu>`
 
+
 // global input color
 const inputColor = document.createElement("input")
 inputColor.type = "color"
@@ -260,10 +261,16 @@ export class HTMLMsaSheetTextEditor extends HTMLElement {
 		}
 		this.Q(".actLink").onclick = () => {
 			var sel = getSelection()
-			addInputPopup(this, "Enter an URL:")
+			addInputPopup(this, document.createElement("msa-utils-text-editor-link"))
 				.then(val => {
 					restoreSelection(sel)
-					document.execCommand("createLink", false, val)
+					document.execCommand("createLink", false, val.value)
+					if (val.newTab) {
+						const anchor = getSelection().startContainer.nextSibling
+						if (anchor.tagName === "A") {
+							anchor.setAttribute("target", "_blank")
+						}
+					}
 				})
 		}
 		this.Q(".actUnlink").onclick = () => { document.execCommand('unlink', false) }
@@ -377,3 +384,27 @@ export function makeTextEditable(target, kwargs) {
 	editorEl.initTarget(target)
 	target.msaTextEditor = editorEl
 }
+
+
+// msa-utils-text-link-editor
+
+const linkEditorTemplate = `
+	<p><input type=text class="val" width=20><p>
+	<p><input type="checkbox" class="newTab"> New tab on click</p>`
+
+class MsaUtilsTextEditorLink extends HTMLElement {
+	connectedCallback() {
+		this.innerHTML = this.getTemplate()
+	}
+	getTemplate() {
+		return linkEditorTemplate
+	}
+	getValue() {
+		return {
+			value: this.querySelector(".val").value,
+			newTab: this.querySelector(".newTab").checked
+		}
+	}
+}
+
+customElements.define("msa-utils-text-editor-link", MsaUtilsTextEditorLink)
