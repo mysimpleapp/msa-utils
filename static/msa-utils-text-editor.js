@@ -294,7 +294,14 @@ export class HTMLMsaSheetTextEditor extends HTMLElement {
 		var backColorOnchange = function () { document.execCommand('backColor', false, this.value) }
 
 		// html
-		this.Q(".actHtml").onclick = () => { createShowHtmlPopup() }
+		this.Q(".actHtml").onclick = async () => {
+			const text = document.createElement("textarea")
+			text.style.width = "20em"
+			text.style.height = "10em"
+			text.value = this.target.innerHTML
+			const newHtml = await addInputPopup(this, text)
+			this.target.innerHTML = newHtml
+		}
 
 		// image
 		this.Q(".actInsertImg").onclick = () => {
@@ -369,58 +376,4 @@ export function makeTextEditable(target, kwargs) {
 	}
 	editorEl.initTarget(target)
 	target.msaTextEditor = editorEl
-}
-
-
-// msa-utils-show-html-popup //////////////////////////////////////
-
-const showHtmlPopupContent = `
-	innerHTML:<br>
-	<textarea class='innerHTML' style='width:500px; height:400px'></textarea>
-	<div style="text-align:right">
-		<button class="ok">Ok</button> 
-		<button class="cancel">Cancel</button>
-	</div>`
-
-
-class HTMLMsaUtilsShowHtmlPopupElement extends HTMLElement {
-
-	connectedCallback() {
-		this.Q = Q
-		this.initContent()
-	}
-
-	initContent() {
-		this.innerHTML = showHtmlPopupContent
-	}
-
-	initActions() {
-		this.Q("button.ok").onclick = () => {
-			this.updateTarget()
-			this.remove()
-		}
-		this.Q("button.cancel").onclick = () => this.cancel()
-	}
-
-	linkTo(target) {
-		this.target = target
-		var content = getTargetContent(target)
-		this.Q(".innerHTML").value = content.innerHTML
-	}
-
-	updateTarget() {
-		var target = this.target
-		if (target) {
-			var content = getTargetContent(target)
-			content.innerHTML = this.Q(".innerHTML").value
-		}
-	}
-}
-
-customElements.define("msa-utils-show-html-popup", HTMLMsaUtilsShowHtmlPopupElement)
-
-// popup
-function createShowHtmlPopup() {
-	const popup = document.createElement("msa-utils-show-html-popup")
-	document.body.appendChild(popup)
 }
