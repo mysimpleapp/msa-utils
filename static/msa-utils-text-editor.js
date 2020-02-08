@@ -181,9 +181,26 @@ const content = `
 const inputColor = document.createElement("input")
 inputColor.type = "color"
 inputColor.style.position = "absolute"
-inputColor.style.left = "-1000px"
-inputColor.style.top = "-1000px"
+inputColor.style.opacity = "0"
+function hideInputColor() {
+	inputColor.style.left = "-1000px"
+	inputColor.style.top = "-1000px"
+}
+function moveInputColorToMouse(evt) {
+	inputColor.style.left = evt.pageX + "px"
+	inputColor.style.top = evt.pageY + "px"
+}
+function triggerInputColorClick(evt) {
+	// move to mouse and setTimeout are necessary for Safari
+	moveInputColorToMouse(evt)
+	setTimeout(() => {
+		inputColor.click()
+		hideInputColor()
+	})
+}
+hideInputColor()
 document.body.appendChild(inputColor)
+
 
 // utils ////////////////////////////
 
@@ -289,16 +306,14 @@ export class HTMLMsaSheetTextEditor extends HTMLElement {
 		this.Q(".actOutdent").onclick = () => { document.execCommand('outdent', false) }
 
 		// color actions
-		this.Q(".actForeColor").onclick = () => {
-			inputColor.onchange = foreColorOnchange
-			inputColor.click()
+		this.Q(".actForeColor").onclick = evt => {
+			inputColor.onchange = function () { document.execCommand('foreColor', false, this.value) }
+			triggerInputColorClick(evt)
 		}
-		var foreColorOnchange = function () { document.execCommand('foreColor', false, this.value) }
-		this.Q(".actBackColor").onclick = () => {
-			inputColor.onchange = backColorOnchange
-			inputColor.click()
+		this.Q(".actBackColor").onclick = evt => {
+			inputColor.onchange = function () { document.execCommand('backColor', false, this.value) }
+			triggerInputColorClick(evt)
 		}
-		var backColorOnchange = function () { document.execCommand('backColor', false, this.value) }
 
 		// html
 		this.Q(".actHtml").onclick = async () => {
