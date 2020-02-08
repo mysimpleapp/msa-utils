@@ -249,7 +249,15 @@ export class HTMLMsaSheetTextEditor extends HTMLElement {
 		this.Q(".actItalic").onclick = () => { document.execCommand('italic', false) }
 		this.Q(".actUnderline").onclick = () => { document.execCommand('underline', false) }
 		this.Q(".actStrikethrough").onclick = () => { document.execCommand('strikethrough', false) }
-		this.Q(".actRemoveFormat").onclick = () => { document.execCommand('formatBlock', false, 'div') }
+		this.Q(".actRemoveFormat").onclick = () => {
+			document.execCommand('formatBlock', false, 'div')
+			// recursively remove style
+			const recRmFormat = el => {
+				if (el != this.target) el.removeAttribute('style')
+				for (let c of el.children) recRmFormat(c)
+			}
+			recRmFormat(getSelection().commonAncestorContainer)
+		}
 		this.Q(".actLink").onclick = () => {
 			var sel = getSelection()
 			addInputPopup(this, "Enter an URL:")
