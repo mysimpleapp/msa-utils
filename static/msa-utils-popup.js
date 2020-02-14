@@ -256,8 +256,8 @@ export function addErrorPopup(parent, dom, kwargs) {
 // msa-utils-popup-confirm /////////////////////////////////
 
 export class HTMLMsaUtilsPopupConfirmElement extends HTMLMsaUtilsPopupElement {
-	async connectedCallback(){
-		await super.connectedCallback()
+	connectedCallback(){
+		super.connectedCallback()
 		this.Q("button.no").focus()
 	}
 	getButtons(){
@@ -300,8 +300,8 @@ export async function importAsConfirmPopup(parent, html, kwargs) {
 // msa-utils-popup-input /////////////////////////////////
 
 export class HTMLMsaUtilsPopupInputElement extends HTMLMsaUtilsPopupElement {
-	async connectedCallback(){
-		await super.connectedCallback()
+	connectedCallback(){
+		super.connectedCallback()
 		this.content.focus()
 	}
 	getContent(){
