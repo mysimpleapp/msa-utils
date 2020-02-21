@@ -6,7 +6,6 @@ const Year = 365 * Day
 
 export function prettyFormatDate(d) {
     const diff = new Date() - d
-    console.log("TMP date", new Date(), d, diff)
     if (diff < Min) {
         return "just now"
     } else if (diff < Hour) {

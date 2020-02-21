@@ -479,6 +479,18 @@ export function importHtml(html, el) {
 }
 
 
+// importObj ///////////////////////////////////
+
+export async function importObj(src) {
+	const s = src.split(':')
+	const mod = await import(s[0])
+	const len = s.length
+	if (len === 1) return mod
+	else if (len === 2) return mod[s[1]]
+	console.warn("importObj src badly formatted", src)
+}
+
+
 // loader ///////////////////////////////////
 
 // default loader (can be modified by setLoaderHtml)
