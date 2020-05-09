@@ -89,26 +89,34 @@ function _formatHtml_core(htmlExpr, head, body, isHead) {
 			// tag (with attrs, style & content)
 			tag = htmlExpr.tag || tag
 			if (tag) {
-				var str = '<' + tag
+				let part1 = '<' + tag
 				// attrs
 				if (style) {
 					if (!attrs) attrs = {}
 					attrs.style = style
 				}
-				if (attrs)
+				if (attrs) {
 					for (var a in attrs) {
 						var val = attrs[a]
 						if (val !== undefined) {
 							if (style) { a = 'style'; val = style }
 							if (a == 'style') val = _formatHtml_style(val)
-							str += ' ' + a + '="' + val + '"'
+							part1 += ' ' + a + '="' + val + '"'
 						}
 					}
-				str += '>'
-				_formatHtml_push(str, head, body, isHead)
-				// content
-				if (cnt) _formatHtml_core(cnt, head, body, isHead)
-				_formatHtml_push('</' + tag + '>', head, body, isHead)
+				}
+				part1 += '>'
+				let part2 = '</' + tag + '>'
+				if (isHead) {
+					let str = part1
+					if (cnt) str += cnt
+					str += part2
+					_formatHtml_push(str, head, body, isHead)
+				} else {
+					_formatHtml_push(part1, head, body, isHead)
+					if (cnt) _formatHtml_core(cnt, head, body, isHead)
+					_formatHtml_push(part2, head, body, isHead)
+				}
 			}
 			// body
 			_formatHtml_core(htmlExpr.body, head, body, false)
