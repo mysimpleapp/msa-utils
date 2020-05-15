@@ -170,9 +170,11 @@ export function parseUrlArgs(str) {
 
 // expandHtmlExpr /////////////////////////////////////////////
 
-export function expandHtmlExpr(expr, isHead) {
-	if (isHead === undefined) isHead = true
-	const head = [], body = []
+// input: str | obj | HTMLElement, bool
+// output: { head|body: [ str | obj | HTMLElement ] }
+// the special keys (wel, mod, imp...) are interpreted
+export function expandHtmlExpr(expr) {
+	const head = [], body = [], isHead = true
 	_expandHtmlExpr_core(expr, head, body, isHead)
 	return { head, body }
 }
@@ -268,8 +270,10 @@ function _expandHtml_push(html, head, body, isHead) {
 	else body.push(html)
 }
 
-export function convertHtmlExpr(htmlExpr, isHead) {
-	const { head, body } = expandHtmlExpr(htmlExpr, isHead)
+// input: str | obj | HTMLElement, bool
+// output: { head|body: [ HTMLElement ] }
+export function convertHtmlExpr(htmlExpr) {
+	const { head, body } = expandHtmlExpr(htmlExpr)
 	return {
 		head: _convertHtmlExpr_core(head, true),
 		body: _convertHtmlExpr_core(body, false)
@@ -300,155 +304,31 @@ function _convertHtmlExpr_core(arr, isHead) {
 	}
 	return res
 }
-
-// formatHtml /////////////////////////////////////////////
-/*
-// format HTML expression to HTML object
-export function formatHtml(htmlExpr) {
-	return _formatHtml(htmlExpr, true)
-}
-const _formatHtml = function(htmlExpr, isHead) {
-	// fill head & body objects
-	const head = new Set(), body = []
-	_formatHtml_core(htmlExpr, head, body, isHead)
-	// format head & body to sring
-	return {
-		head: join(head, '\n'),
-		body: body.join('\n')
-	}
-}
-const _formatHtml_core = function(htmlExpr, head, body, isHead) {
-	var type = typeof htmlExpr
-	// case string
-	if(type==="string") {
-		_formatHtml_push(htmlExpr.trim(), head, body, isHead)
-	} else if(type==="object") {
-		// case array
-		const len = htmlExpr.length
-		if(len!==undefined) {
-			for(let i=0; i<len; ++i)
-				_formatHtml_core(htmlExpr[i], head, body, isHead)
-		// case object
-		} else {
-			var tag = htmlExpr.tag
-			var cnt = htmlExpr.content || htmlExpr.cnt
-			var attrs = htmlExpr.attributes || htmlExpr.attrs
-			var style = htmlExpr.style
-			var imp = htmlExpr.import
-			var mod = htmlExpr.module || htmlExpr.mod
-			var js = htmlExpr.script || htmlExpr.js
-			var css = htmlExpr.stylesheet || htmlExpr.css
-			var wel = htmlExpr.webelement || htmlExpr.wel
-			// web element
-			if(wel) {
-				const ext = wel.split(".").pop()
-				if(ext === "html"){
-					_formatHtml_core({ import:wel }, head, body, isHead)
-					tag = tag || /([a-zA-Z0-9-_]*)\.html$/.exec(wel)[1]
-				} else if(ext === "js"){
-					_formatHtml_core({ mod:wel }, head, body, isHead)
-					tag = tag || /([a-zA-Z0-9-_]*)\.js$/.exec(wel)[1]
-				}
-				isHead = false
-			}
-			// html import
-			if(imp && !tag) {
-				var importUrl = _formatHtml_toUrl(imp)
-				tag = 'link'
-				attrs = attrs || {}
-				attrs.rel = 'import'
-				attrs.href = importUrl
-				isHead = true
-			}
-			// js module
-			if(mod && !tag) {
-				tag = 'script'
-				attrs = attrs || {}
-				attrs.src = mod
-				attrs.type = 'module'
-				isHead = true
-			}
-			// script
-			if(js && !tag) {
-				var jsUrl = _formatHtml_toUrl(js)
-				tag = 'script'
-				attrs = attrs || {}
-				attrs.src = jsUrl
-				isHead = true
-			}
-			// stylesheet
-			if(css && !tag) {
-				var cssUrl = _formatHtml_toUrl(css)
-				tag = 'link'
-				attrs = attrs || {}
-				attrs.rel = 'stylesheet'
-				attrs.type = 'text/css'
-				attrs.href = cssUrl
-				isHead = true
-			}
-			// tag (with attrs & content)
-			tag = htmlExpr.tag || tag
-			if(tag) {
-				var str = '<'+tag
-				// style
-				if(style) {
-					if(!attrs) attrs={}
-					attrs.style = style
-				}
-				// attrs
-				if(attrs)
-					for(var a in attrs) {
-						var val = attrs[a]
-						if(a=='style') val = _formatHtml_style(val)
-						str += ' '+ a +'="'+ _formatHtml_str(val) +'"'
-					}
-				str += '>'
-				_formatHtml_push(str, head, body, isHead)
-				// content
-				if(cnt) _formatHtml_core(cnt, head, body, isHead)
-				_formatHtml_push('</'+tag+'>', head, body, isHead)
-			}
-			// body
-			_formatHtml_core(htmlExpr.body, head, body, false)
-			// head
-			_formatHtml_core(htmlExpr.head, head, body, true)
-		}
-	}
-}
-const _formatHtml_str = function(val) {
-	if(typeof val === "string")
-		return val.replace(/"/g,'\\"')
-	else return val
-}
-const _formatHtml_style = function(style) {
-	var type = typeof style
-	if(type==="string") return style
-	else if(type==="object") {
-		var str = ""
-		for(var a in style) str += a+':'+style[a]+'; '
-		return str
-	}
-}
-const _formatHtml_push = function(html, head, body, isHead) {
-	if(isHead) head.add(html)
-	else body.push(html)
-}
-const _formatHtml_toUrl = function(url) {
-	return url
-}
-*/
 // importHtml ///////////////////////////////////
 
 // cache of promises on any content imported into document head
 const ImportCache = {}
 
-export function importHtml(html, el) {
+// input: str | obj | HTMLElement (, el), kwargs
+export async function importHtml(html, arg1, arg2) {
+	let el, kwargs
+	if (arg1 instanceof HTMLElement) {
+		el = arg1; kwargs = arg2
+	} else {
+		kwargs = arg1
+	}
 	const isHead = el ? false : true
-	const { head, body } = convertHtmlExpr(html, isHead)
-	const newEls = []
+	html = isHead ? { head: html } : { body: html }
+	let convertedHtml
+	if (kwargs && kwargs.boxParent) {
+		convertedHtml = await convertBoxHtmlExpr(html)
+	} else {
+		convertedHtml = convertHtmlExpr(html)
+	}
+	const { head, body } = convertedHtml
 	const loads = []
 	if (head) {
-		// for each inpu head element 
+		// for each input head element 
 		for (let h of head) {
 			// check if it is already in cache
 			const hHtml = h.outerHTML
@@ -465,17 +345,61 @@ export function importHtml(html, el) {
 			loads.push(prm)
 		}
 	}
-	if (body) {
-		for (let b of body) {
-			newEls.push(b)
-			if (el instanceof HTMLElement) el.appendChild(b)
-		}
-	}
 	return new Promise((ok, ko) => {
 		Promise.all(loads)
-			.then(() => ok(newEls))
+			.then(() => {
+				const newEls = []
+				if (body) for (let b of body) {
+					newEls.push(b)
+					if (el) el.appendChild(b)
+					if (kwargs && kwargs.boxParent && b.initAsMsaBox)
+						b.initAsMsaBox(kwargs.boxParent)
+				}
+				ok(newEls)
+			})
 			.catch(ko)
 	})
+}
+
+// boxes ////////////////////////////////////
+
+let MsaBoxInfosPrm = null
+
+export function getMsaBoxInfos() {
+	if (!MsaBoxInfosPrm)
+		MsaBoxInfosPrm = ajax("GET", "/utils/boxes")
+	return MsaBoxInfosPrm
+}
+
+export async function importMsaBoxHead(box) {
+	if (!box) return
+	if (box.length !== undefined) {
+		const loads = []
+		for (let i = 0, len = box.length; i < len; ++i)
+			loads.push(importMsaBoxHead(box[i]))
+		return await Promise.all(loads)
+	}
+	let tag
+	if (typeof box === "string") tag = box
+	else if (box instanceof HTMLElement) tag = box.tagName.toLowerCase()
+	else return
+	const boxInfos = await getMsaBoxInfos()
+	const boxInfo = boxInfos[tag]
+	const loads = []
+	if (boxInfo) {
+		const head = boxInfo.head
+		if (head) loads.push(import(head))
+	}
+	await Promise.all(loads)
+}
+
+export async function importMsaBox(el, box, ctx) {
+	await importMsaBoxHead(box)
+	const boxes = (box.length === undefined) ? [box] : box
+	for (let _box of boxes) {
+		_box.msaBoxCtx = ctx
+		el.appendChild(_box)
+	}
 }
 
 
