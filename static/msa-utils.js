@@ -371,41 +371,51 @@ export function getMsaBoxInfos() {
 	return MsaBoxInfosPrm
 }
 
-export async function importMsaBoxHead(box) {
-	if (!box) return
-	if (box.length !== undefined) {
-		const loads = []
-		for (let i = 0, len = box.length; i < len; ++i)
-			loads.push(importMsaBoxHead(box[i]))
-		return await Promise.all(loads)
-	}
-	let tag
-	if (typeof box === "string") tag = box
-	else if (box instanceof HTMLElement) tag = box.tagName.toLowerCase()
-	else return
+export async function getMsaBoxInfo(el) {
 	const boxInfos = await getMsaBoxInfos()
-	const boxInfo = boxInfos[tag]
-	const loads = []
-	if (boxInfo) {
-		const head = boxInfo.head
-		if (head) loads.push(import(head))
-	}
-	await Promise.all(loads)
+	const tag = _getBoxTag(el)
+	return boxInfos[tag]
 }
 
-export async function importMsaBox(el, box, ctx) {
+export async function importMsaBoxHead(box) {
+	if (!box) return
+	if (box.length !== undefined)
+		return await Promise.all(_map(box, b => importMsaBoxHead(b)))
+	const boxInfo = await getMsaBoxInfo(box)
+	if (boxInfo.head) await import(boxInfo.head)
+}
+
+export async function initMsaBox(box, ctx) {
 	await importMsaBoxHead(box)
 	const boxes = (box.length === undefined) ? [box] : box
-	for (let _box of boxes) {
-		_box.msaBoxCtx = ctx
-		el.appendChild(_box)
-	}
+	await Promise.all(_map(boxes, b => _callMsaBoxFun(b, "init", b, ctx)))
+}
+
+// map that works also on NodeList
+function _map(arr, maper) {
+	const res = []
+	for (let i = 0, len = arr.length; i < len; ++i)
+		res.push(maper(arr[i]))
+	return res
+}
+
+function _getBoxTag(box) {
+	if (typeof box === "string") return box
+	else if (box instanceof HTMLElement) return box.tagName.toLowerCase()
+}
+
+async function _callMsaBoxFun(box, funName, ...args) {
+	const boxInfo = await getMsaBoxInfo(box)
+	const funRef = boxInfo && boxInfo[funName]
+	const fun = funRef && await importObj(funRef)
+	if (fun) return fun(...args)
 }
 
 
 // importObj ///////////////////////////////////
 
 export async function importObj(src) {
+	if (!src) return
 	const s = src.split(':')
 	const mod = await import(s[0])
 	const len = s.length
