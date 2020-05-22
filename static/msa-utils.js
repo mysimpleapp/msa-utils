@@ -385,6 +385,13 @@ async function _importMsaBoxHead(box, boxInfo) {
 	if (boxInfo.head) await import(boxInfo.head)
 }
 
+export async function createMsaBox(tag, parent) {
+	const boxInfo = await getMsaBoxInfo(tag)
+	const createRef = boxInfo.createRef
+	const create = createRef && await importRef(boxInfo.createRef)
+	return create ? await create(parent) : document.createElement(tag)
+}
+
 export async function initMsaBox(el, ctx) {
 	await forEachDeepMsaBox(el, async (box, boxInfo) => {
 		await _importMsaBoxHead(box, boxInfo)
@@ -424,11 +431,12 @@ function _getBoxTag(box) {
 }
 
 export async function forEachDeepMsaBox(el, fun) {
-	const els = el.length !== undefined ? el : [el]
-	await Promise.all(_map(els, async el => {
-		const boxInfo = await getMsaBoxInfo(el)
-		if (boxInfo) await fun(el, boxInfo)
-		else await forEachDeepMsaBox(el.children, fun)
+	if (!el) return
+	const els = (el.length !== undefined) ? el : [el]
+	await Promise.all(_map(els, async _el => {
+		const boxInfo = await getMsaBoxInfo(_el)
+		if (boxInfo) await fun(_el, boxInfo)
+		else await forEachDeepMsaBox(_el.children, fun)
 	}))
 }
 
