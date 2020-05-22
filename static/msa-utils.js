@@ -388,8 +388,8 @@ async function _importMsaBoxHead(box, boxInfo) {
 export async function initMsaBox(el, ctx) {
 	await _forEachDeepBox(el, async (box, boxInfo) => {
 		await _importMsaBoxHead(box, boxInfo)
-		const initRef = boxInfo.init
-		const init = initRef && await importObj(initRef)
+		const initRef = boxInfo.initRef
+		const init = initRef && await importRef(initRef)
 		if (init) return await init(box, ctx)
 	})
 }
@@ -400,8 +400,8 @@ export async function exportMsaBox(el) {
 	for (let i = 0, len = els.length; i < len; ++i)
 		tmpl.content.appendChild(els[i].cloneNode(true))
 	await _forEachDeepBox(tmpl.content, async (box, boxInfo) => {
-		const exportRef = boxInfo.export
-		const _export = exportRef && await importObj(exportRef)
+		const exportRef = boxInfo.exportRef
+		const _export = exportRef && await importRef(exportRef)
 		if (_export) {
 			const ebox = await _export(box)
 			box.parentNode.replaceChild(ebox, box)
@@ -433,16 +433,16 @@ function _map(arr, maper) {
 }
 
 
-// importObj ///////////////////////////////////
+// importRef ///////////////////////////////////
 
-export async function importObj(src) {
-	if (!src) return
-	const s = src.split(':')
+export async function importRef(ref) {
+	if (!ref) return
+	const s = ref.split(':')
 	const mod = await import(s[0])
 	const len = s.length
 	if (len === 1) return mod
 	else if (len === 2) return mod[s[1]]
-	console.warn("importObj src badly formatted", src)
+	console.warn("Ref badly formatted", ref)
 }
 
 
