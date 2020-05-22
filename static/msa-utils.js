@@ -377,18 +377,51 @@ export async function getMsaBoxInfo(el) {
 	return boxInfos[tag]
 }
 
-export async function importMsaBoxHead(box) {
-	if (!box) return
-	if (box.length !== undefined)
-		return await Promise.all(_map(box, b => importMsaBoxHead(b)))
-	const boxInfo = await getMsaBoxInfo(box)
+export async function importMsaBoxHead(el) {
+	await _forEachDeepBox(el, _importMsaBoxHead)
+}
+
+async function _importMsaBoxHead(box, boxInfo) {
 	if (boxInfo.head) await import(boxInfo.head)
 }
 
-export async function initMsaBox(box, ctx) {
-	await importMsaBoxHead(box)
-	const boxes = (box.length === undefined) ? [box] : box
-	await Promise.all(_map(boxes, b => _callMsaBoxFun(b, "init", b, ctx)))
+export async function initMsaBox(el, ctx) {
+	await _forEachDeepBox(el, async (box, boxInfo) => {
+		await _importMsaBoxHead(box, boxInfo)
+		const initRef = boxInfo.init
+		const init = initRef && await importObj(initRef)
+		if (init) return await init(box, ctx)
+	})
+}
+
+export async function exportMsaBox(el) {
+	const els = el.length !== undefined ? el : [el]
+	const tmpl = document.createElement("template")
+	for (let i = 0, len = els.length; i < len; ++i)
+		tmpl.content.appendChild(els[i].cloneNode(true))
+	await _forEachDeepBox(tmpl.content, async (box, boxInfo) => {
+		const exportRef = boxInfo.export
+		const _export = exportRef && await importObj(exportRef)
+		if (_export) {
+			const ebox = await _export(box)
+			box.parentNode.replaceChild(ebox, box)
+		}
+	})
+	return tmpl
+}
+
+function _getBoxTag(box) {
+	if (typeof box === "string") return box
+	else if (box instanceof HTMLElement) return box.tagName.toLowerCase()
+}
+
+async function _forEachDeepBox(el, fun) {
+	const els = el.length !== undefined ? el : [el]
+	await Promise.all(_map(els, async el => {
+		const boxInfo = await getMsaBoxInfo(el)
+		if (boxInfo) await fun(el, boxInfo)
+		else await _forEachDeepBox(el.children, fun)
+	}))
 }
 
 // map that works also on NodeList
@@ -397,18 +430,6 @@ function _map(arr, maper) {
 	for (let i = 0, len = arr.length; i < len; ++i)
 		res.push(maper(arr[i]))
 	return res
-}
-
-function _getBoxTag(box) {
-	if (typeof box === "string") return box
-	else if (box instanceof HTMLElement) return box.tagName.toLowerCase()
-}
-
-async function _callMsaBoxFun(box, funName, ...args) {
-	const boxInfo = await getMsaBoxInfo(box)
-	const funRef = boxInfo && boxInfo[funName]
-	const fun = funRef && await importObj(funRef)
-	if (fun) return fun(...args)
 }
 
 
