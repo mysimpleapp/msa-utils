@@ -378,7 +378,7 @@ export async function getMsaBoxInfo(el) {
 }
 
 export async function importMsaBoxHead(el) {
-	await _forEachDeepBox(el, _importMsaBoxHead)
+	await forEachDeepMsaBox(el, _importMsaBoxHead)
 }
 
 async function _importMsaBoxHead(box, boxInfo) {
@@ -386,7 +386,7 @@ async function _importMsaBoxHead(box, boxInfo) {
 }
 
 export async function initMsaBox(el, ctx) {
-	await _forEachDeepBox(el, async (box, boxInfo) => {
+	await forEachDeepMsaBox(el, async (box, boxInfo) => {
 		await _importMsaBoxHead(box, boxInfo)
 		const initRef = boxInfo.initRef
 		const init = initRef && await importRef(initRef)
@@ -399,7 +399,7 @@ export async function exportMsaBox(el) {
 	const tmpl = document.createElement("template")
 	for (let i = 0, len = els.length; i < len; ++i)
 		tmpl.content.appendChild(els[i].cloneNode(true))
-	await _forEachDeepBox(tmpl.content, async (box, boxInfo) => {
+	await forEachDeepMsaBox(tmpl.content, async (box, boxInfo) => {
 		const exportRef = boxInfo.exportRef
 		const _export = exportRef && await importRef(exportRef)
 		if (_export) {
@@ -410,17 +410,25 @@ export async function exportMsaBox(el) {
 	return tmpl
 }
 
+export async function editMsaBox(el, val) {
+	await forEachDeepMsaBox(el, async (box, boxInfo) => {
+		const editRef = boxInfo.editRef
+		const edit = editRef && await importRef(editRef)
+		if (edit) await edit(box, val)
+	})
+}
+
 function _getBoxTag(box) {
 	if (typeof box === "string") return box
 	else if (box instanceof HTMLElement) return box.tagName.toLowerCase()
 }
 
-async function _forEachDeepBox(el, fun) {
+export async function forEachDeepMsaBox(el, fun) {
 	const els = el.length !== undefined ? el : [el]
 	await Promise.all(_map(els, async el => {
 		const boxInfo = await getMsaBoxInfo(el)
 		if (boxInfo) await fun(el, boxInfo)
-		else await _forEachDeepBox(el.children, fun)
+		else await forEachDeepMsaBox(el.children, fun)
 	}))
 }
 
@@ -430,6 +438,24 @@ function _map(arr, maper) {
 	for (let i = 0, len = arr.length; i < len; ++i)
 		res.push(maper(arr[i]))
 	return res
+}
+
+
+// box text
+
+class MsaUtilsTextBoxHTMLElement extends HTMLElement { }
+customElements.define("msa-utils-text-box", MsaUtilsTextBoxHTMLElement)
+
+importHtml(`<style>
+	msa-utils-text-box {
+		padding: .5em;
+		min-height: 1em;
+	}
+</style>`)
+
+export async function editMsaBoxText(box, editable) {
+	const mod = await import("/utils/msa-utils-text-editor.js")
+	mod.makeTextEditable(box, editable && null)
 }
 
 

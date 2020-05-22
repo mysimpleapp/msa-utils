@@ -35,19 +35,19 @@ export class HTMLMsaUtilsBoxesMenuElement extends HTMLElement {
 
 	async renderBoxes() {
 		const boxInfos = await getMsaBoxInfos()
-		for (let k in boxInfos) {
-			const but = this.newBoxButton(boxInfos[k])
+		for (let tag in boxInfos) {
+			const but = this.newBoxButton(tag, boxInfos[tag])
 			this.appendChild(but)
 		}
 	}
 
-	newBoxButton(box) {
+	newBoxButton(tag, boxInfo) {
 		const but = document.createElement("span")
 		but.classList.add("button")
-		but.innerHTML = "<div class='img'>" + box.img + "</div>"
-		but.innerHTML += "<div class='title'>" + box.title + "</div>"
-		but.box = box
-		but.addEventListener("click", () => this.onSelect(box))
+		but.innerHTML = "<div class='img'>" + boxInfo.img + "</div>"
+		but.innerHTML += "<div class='title'>" + boxInfo.title + "</div>"
+		but.boxInfo = boxInfo
+		but.addEventListener("click", () => this.onSelect(tag, boxInfo))
 		return but
 	}
 }
