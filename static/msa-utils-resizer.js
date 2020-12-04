@@ -1,5 +1,6 @@
 import { importHtml } from "/utils/msa-utils.js"
 import { backup, restore } from "/utils/msa-utils-common.js"
+import { setPositionRelativeTo } from "/utils/msa-utils-position.js"
 
 importHtml(`<style>
 	msa-utils-resizer-handle {
@@ -33,13 +34,13 @@ function createResizer(target, methods, eventKey, args) {
 	// handles
 	resizer.handles = []
 	createHandle(resizer, "left", "top")
-	createHandle(resizer, null, "top")
+	createHandle(resizer, "center", "top")
 	createHandle(resizer, "right", "top")
-	createHandle(resizer, "right", null)
+	createHandle(resizer, "right", "center")
 	createHandle(resizer, "right", "bottom")
-	createHandle(resizer, null, "bottom")
+	createHandle(resizer, "center", "bottom")
 	createHandle(resizer, "left", "bottom")
-	createHandle(resizer, "left", null)
+	createHandle(resizer, "left", "center")
 	// onCreate
 	if(resizer.onCreate) resizer.onCreate(args)
 	// do sync
@@ -329,41 +330,7 @@ function switchStretchToJust(resizer, handle) {
 
 resizableMethods.sync = function() {
 	var target = this.target
-	var compStyle = window.getComputedStyle(target)
-	var targetPosition = compStyle.position
-	var relativeToTarget = (targetPosition=="absolute" || targetPosition=="relative")
-	// if target has relative or absolute pos: use this to set handles positions (as this is less buggy than other solution)
-	if(relativeToTarget) {
-		this.handles.forEach(function(handle){
-			var style = handle.style, posX = handle.posX, posY = handle.posY
-			// left / right
-			if(posX=="left") style.left = "-5px"
-			if(!posX) style.left = "50%"
-			if(posX=="right") style.right = "-5px"
-			// top / bottom
-			if(posY=="top") style.top = "-5px"
-			if(!posY) style.top = "50%"
-			if(posY=="bottom") style.bottom = "-5px"
-		})
-	// else: set handle positions using offsets
-	} else {
-		var targetLeft = target.offsetLeft
-		var targetTop = target.offsetTop
-		var targetWidth = target.offsetWidth
-		var targetHeight = target.offsetHeight
-		// for each handle
-		this.handles.forEach(function(handle){
-			var style = handle.style, posX = handle.posX, posY = handle.posY
-			// left / right
-			if(posX=="left") style.left = (targetLeft - 5) +"px"
-			if(!posX) style.left = (targetLeft + targetWidth/2) +"px"
-			if(posX=="right") style.left = (targetLeft + targetWidth - 5) +"px"
-			// top / bottom
-			if(posY=="top") style.top = (targetTop - 5) +"px"
-			if(!posY) style.top = (targetTop + targetHeight/2) +"px"
-			if(posY=="bottom") style.top = (targetTop + targetHeight - 5) +"px"
-		})
-	}
+	this.handles.forEach(h => setPositionRelativeTo(h, target, h.posX, h.posY))
 	// activate handles
 	var flex = getFlex(target)
 	var xHandlesActivated = (target.style.width != false && flex!='x')
