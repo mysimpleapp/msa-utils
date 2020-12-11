@@ -452,11 +452,11 @@ function _map(arr, maper) {
 // box text
 
 importHtml(`<style>
-msa-utils-text-box {
-	padding: .5em;
-	min-height: 1em;
-	width: 100%;
-}
+	msa-utils-text-box {
+		padding: .5em;
+		min-height: 1em;
+		width: 100%;
+	}
 </style>`)
 
 class MsaUtilsTextBoxHTMLElement extends HTMLElement {
