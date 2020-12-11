@@ -451,20 +451,30 @@ function _map(arr, maper) {
 
 // box text
 
-class MsaUtilsTextBoxHTMLElement extends HTMLElement { }
-customElements.define("msa-utils-text-box", MsaUtilsTextBoxHTMLElement)
-
 importHtml(`<style>
-	msa-utils-text-box {
-		padding: .5em;
-		min-height: 1em;
-		width: 100%;
-	}
+msa-utils-text-box {
+	padding: .5em;
+	min-height: 1em;
+	width: 100%;
+}
 </style>`)
+
+class MsaUtilsTextBoxHTMLElement extends HTMLElement {
+	connectedCallback() {
+		this.contentEl = this.querySelector(".content")
+		if(!this.contentEl) {
+			this.contentEl = document.createElement("div")
+			this.contentEl.classList.add("content")
+			this.appendChild(this.contentEl)
+		}
+    }
+}
+customElements.define("msa-utils-text-box", MsaUtilsTextBoxHTMLElement)
 
 export async function editMsaBoxText(box, editable) {
 	const mod = await import("/utils/msa-utils-text-editor.js")
-	mod.makeTextEditable(box, editable && null)
+	const args = (editable === false) ? false : { popupEditor: true }
+	mod.makeTextEditable(box.contentEl, args)
 }
 
 

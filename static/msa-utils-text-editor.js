@@ -384,20 +384,18 @@ export function makeTextEditable(target, kwargs) {
 	}
 	let popupEditor = kwargs && kwargs.popupEditor
 	let editor = kwargs && kwargs.editor
-	let editorEl
+	const editorEl = document.createElement("msa-utils-text-editor")
 	if (popupEditor) {
 		if (popupEditor === true) popupEditor = target.parentNode
-		const popup = addPopup(popupEditor, "msa-utils-text-editor")
-		editorEl = popup.content
+		target.msaTextEditor = addPopup(popupEditor, editorEl)
 	} else {
-		editorEl = document.createElement("msa-utils-text-editor")
 		if (!editor)
 			target.parentNode.insertBefore(editorEl, target)
 		else
 			editor.appendChild(editorEl)
+		target.msaTextEditor = editorEl
 	}
 	editorEl.initTarget(target)
-	target.msaTextEditor = editorEl
 }
 
 
