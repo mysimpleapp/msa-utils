@@ -15,6 +15,7 @@ importHtml(`<style>
     
     .msa-utils-box-first-add-btn {
         display: block;
+        min-width: 3em;
         height: 3em;
         background: white;
         background-image: url('/utils/img/add');
