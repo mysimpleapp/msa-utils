@@ -1,4 +1,4 @@
-import { importHtml, getMsaBoxInfos } from "/utils/msa-utils.js"
+import { importHtml, fetchMsaBoxInfos } from "/utils/msa-utils.js"
 
 importHtml(`<style>
 	msa-utils-boxes-menu .button {
@@ -34,7 +34,7 @@ export class HTMLMsaUtilsBoxesMenuElement extends HTMLElement {
 	}
 
 	async renderBoxes() {
-		const boxInfos = await getMsaBoxInfos()
+		const boxInfos = await fetchMsaBoxInfos()
 		for (let tag in boxInfos) {
 			const but = this.newBoxButton(tag, boxInfos[tag])
 			this.appendChild(but)

@@ -365,63 +365,70 @@ export async function importHtml(html, arg1, arg2) {
 
 let MsaBoxInfosPrm = null
 
-export function getMsaBoxInfos() {
+export async function registerMsaBox(tag, kwargs) {
+	const boxInfos = await fetchMsaBoxInfos()
+	if(!boxInfos[tag]) boxInfos[tag] = {}
+	Object.assign(boxInfos[tag], kwargs)
+}
+
+export function fetchMsaBoxInfos() {
 	if (!MsaBoxInfosPrm)
 		MsaBoxInfosPrm = ajax("GET", "/utils/boxes")
 	return MsaBoxInfosPrm
 }
 
 export async function getMsaBoxInfo(el) {
-	const boxInfos = await getMsaBoxInfos()
+	const boxInfos = await fetchMsaBoxInfos()
 	const tag = _getBoxTag(el)
 	return boxInfos[tag]
 }
 
-export async function importMsaBoxHead(el) {
-	await forEachDeepMsaBox(el, _importMsaBoxHead)
-}
-
-async function _importMsaBoxHead(box, boxInfo) {
+async function _importMsaBoxHead(boxInfo) {
 	if (boxInfo.head) await import(boxInfo.head)
 }
 
 export async function createMsaBox(tag, parent) {
 	const boxInfo = await getMsaBoxInfo(tag)
-	const createRef = boxInfo.createRef
-	const create = createRef && await importRef(boxInfo.createRef)
-	return create ? await create(parent) : document.createElement(tag)
-}
-
-export async function initMsaBox(el, ctx) {
-	await forEachDeepMsaBox(el, async (box, boxInfo) => {
-		await _importMsaBoxHead(box, boxInfo)
-		const initRef = boxInfo.initRef
-		const init = initRef && await importRef(initRef)
-		if (init) return await init(box, ctx)
-	})
+	await _importMsaBoxHead(boxInfo)
+	const createBox = boxInfo.createBox
+	return createBox ? await createBox(parent) : document.createElement(tag)
 }
 
 export async function exportMsaBox(el) {
+	// array support
 	const els = el.length !== undefined ? el : [el]
-	const tmpl = document.createElement("template")
+	// copy in template
+	const headTmpl = document.createElement("template")
+	const bodyTmpl = document.createElement("template")
 	for (let i = 0, len = els.length; i < len; ++i)
-		tmpl.content.appendChild(els[i].cloneNode(true))
-	await forEachDeepMsaBox(tmpl.content, async (box, boxInfo) => {
-		const exportRef = boxInfo.exportRef
-		const _export = exportRef && await importRef(exportRef)
-		if (_export) {
-			const ebox = await _export(box)
+		bodyTmpl.content.appendChild(els[i].cloneNode(true))
+	// deep loop in msa boxes
+	await forEachChildMsaBox(bodyTmpl.content, async (box, boxInfo) => {
+		// Add heads
+		const head = boxInfo.head
+		if(head) {
+			const scriptEl = document.createElement("script")
+			scriptEl.type = "module"
+			scriptEl.src = head
+			headTmpl.content.appendChild(scriptEl)
+		}
+		// call export functions
+		const exportBox = boxInfo.exportBox
+		if (exportBox) {
+			const ebox = await exportBox(box)
 			box.parentNode.replaceChild(ebox, box)
 		}
 	})
-	return tmpl
+	return {
+		head: headTmpl,
+		body: bodyTmpl
+	}
 }
 
 export async function editMsaBox(el, val) {
-	await forEachDeepMsaBox(el, async (box, boxInfo) => {
-		const editRef = boxInfo.editRef
-		const edit = editRef && await importRef(editRef)
-		if (edit) await edit(box, val)
+	await forEachChildMsaBox(el, async (box, boxInfo) => {
+		const editBox = boxInfo.editBox
+		if (editBox) await editBox(box, val)
 	})
 }
 
@@ -430,14 +437,28 @@ function _getBoxTag(box) {
 	else if (box instanceof HTMLElement) return box.tagName.toLowerCase()
 }
 
-export async function forEachDeepMsaBox(el, fun) {
+export async function forEachChildMsaBox(el, fun) {
 	if (!el) return
 	const els = (el.length !== undefined) ? el : [el]
 	await Promise.all(_map(els, async _el => {
 		const boxInfo = await getMsaBoxInfo(_el)
 		if (boxInfo) await fun(_el, boxInfo)
-		else await forEachDeepMsaBox(_el.children, fun)
+		else await forEachChildMsaBox(_el.children, fun)
 	}))
+}
+
+export function exposeMsaBoxCtx(el, ctx) {
+	el.exposedMsaBoxCtx = ctx
+}
+
+export async function getMsaBoxCtx(el) {
+	while(true) {
+		const parentEl = el.parentNode
+		if(!parentEl) return
+		if(parentEl.exposedMsaBoxCtx)
+			return parentEl.exposedMsaBoxCtx
+		el = parentEl
+	}
 }
 
 // map that works also on NodeList
@@ -471,25 +492,13 @@ class MsaUtilsTextBoxHTMLElement extends HTMLElement {
 }
 customElements.define("msa-utils-text-box", MsaUtilsTextBoxHTMLElement)
 
-export async function editMsaBoxText(box, editable) {
-	const mod = await import("/utils/msa-utils-text-editor.js")
-	const args = (editable === false) ? false : { popupEditor: true }
-	mod.makeTextEditable(box.contentEl, args)
-}
-
-
-// importRef ///////////////////////////////////
-
-export async function importRef(ref) {
-	if (!ref) return
-	const s = ref.split(':')
-	const mod = await import(s[0])
-	const len = s.length
-	if (len === 1) return mod
-	else if (len === 2) return mod[s[1]]
-	console.warn("Ref badly formatted", ref)
-}
-
+registerMsaBox("msa-utils-text-box", {
+	editBox: async function(box, editable) {
+		const mod = await import("/utils/msa-utils-text-editor.js")
+		const args = (editable === false) ? false : { popupEditor: true }
+		mod.makeTextEditable(box.contentEl, args)
+	}
+})
 
 // loader ///////////////////////////////////
 

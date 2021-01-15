@@ -1,4 +1,4 @@
-import { importHtml, importOnCall, createMsaBox, initMsaBox, exportMsaBox, editMsaBox, forEachDeepMsaBox } from "/utils/msa-utils.js"
+import { importHtml, importOnCall, createMsaBox, exportMsaBox, editMsaBox, forEachChildMsaBox } from "/utils/msa-utils.js"
 
 const addPopup = importOnCall("/utils/msa-utils-popup.js", "addPopup")
 const setPositionRelativeTo = importOnCall("/utils/msa-utils-position.js", "setPositionRelativeTo")
@@ -52,8 +52,9 @@ export async function editMsaBoxes(el, boxCtx) {
 }
 
 async function _makeBoxEditable(el, initEl, boxCtx) {
-    await forEachDeepMsaBox(initEl, async box => {
-        box.msaBoxContentBeforeEdition = (await exportMsaBoxes(box)).innerHTML
+    await forEachChildMsaBox(initEl, async box => {
+        const exported = await exportMsaBoxes(box)
+        box.msaBoxContentBeforeEdition = exported.body.innerHTML
         box.classList.add("msa-utils-box-editable")
         box.setAttribute("tabindex", 0)
         box.addEventListener("focus", () => _editMsaBox(el, box))
@@ -79,7 +80,8 @@ async function _stopEditMsaBox(el, box) {
     delete el.msaUtilsEditingBox
     box.classList.remove("msa-utils-box-editing")
     await editMsaBox(box, false)
-    const content = (await exportMsaBoxes(box)).innerHTML
+    const exported = await exportMsaBoxes(box)
+    const content = exported.body.innerHTML
     if (content != box.msaBoxContentBeforeEdition){
         el.dispatchEvent(new Event("msa-box-edited", {
             detail: { box }
@@ -128,7 +130,6 @@ function _initAddButton(el, addBtn, boxCtx, insertBoxFn) {
             const box = await createMsaBox(tag, boxCtx2)
             box.style.margin = ".5em"
             box.style.padding = ".5em"
-            await initMsaBox(box, boxCtx2)
             await _makeBoxEditable(el, box)
             insertBoxFn(box)
             el.dispatchEvent(new Event("msa-box-inserted", {
@@ -147,14 +148,14 @@ function _createLine(box) {
 }
 
 export async function exportMsaBoxes(el) {
-    const tmpl = await exportMsaBox(el)
-    for (let ed of tmpl.content.querySelectorAll(".msa-utils-box-editor"))
+    const exported = await exportMsaBox(el)
+    for (let ed of exported.body.content.querySelectorAll(".msa-utils-box-editor"))
         ed.remove()
-    for (let box of tmpl.content.querySelectorAll(".msa-utils-box-editable")) {
+    for (let box of exported.body.content.querySelectorAll(".msa-utils-box-editable")) {
         box.classList.remove("msa-utils-box-editable")
         box.removeAttribute("tabindex")
     }
-    return tmpl
+    return exported
 }
 
 // utils
