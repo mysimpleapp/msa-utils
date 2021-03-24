@@ -80,6 +80,8 @@ async function _stopEditMsaBox(el, box) {
     delete el.msaUtilsEditingBox
     box.classList.remove("msa-utils-box-editing")
     await editMsaBox(box, false)
+    // check if box have changed
+    // and dispatch change if so
     const exported = await exportMsaBoxes(box)
     const content = exported.body.innerHTML
     if (content != box.msaBoxContentBeforeEdition){

@@ -6,6 +6,7 @@ export function importOnCall(src, fun) {
 }
 
 const addErrorPopup = importOnCall("/utils/msa-utils-popup.js", "addErrorPopup")
+const setMsaAppEditor = importOnCall("/msa-app-edition.js", "setMsaAppEditor")
 
 // method for cached query in dom
 export function Q(query) {
@@ -425,11 +426,14 @@ export async function exportMsaBox(el) {
 	}
 }
 
-export async function editMsaBox(el, val) {
-	await forEachChildMsaBox(el, async (box, boxInfo) => {
-		const editBox = boxInfo.editBox
-		if (editBox) await editBox(box, val)
-	})
+export async function editMsaBox(boxEl, val) {
+	const boxInfo = await getMsaBoxInfo(boxEl)
+	const editBox = boxInfo.editBox
+	let editorEl = null
+	if (editBox) {
+		editorEl = await editBox(boxEl, val)
+	}
+	await setMsaAppEditor(val ? editorEl : null)
 }
 
 function _getBoxTag(box) {
@@ -493,10 +497,20 @@ class MsaUtilsTextBoxHTMLElement extends HTMLElement {
 customElements.define("msa-utils-text-box", MsaUtilsTextBoxHTMLElement)
 
 registerMsaBox("msa-utils-text-box", {
-	editBox: async function(box, editable) {
-		const mod = await import("/utils/msa-utils-text-editor.js")
-		const args = (editable === false) ? false : { popupEditor: true }
-		mod.makeTextEditable(box.contentEl, args)
+	editBox: async function(boxEl, editable) {
+		if(editable) {
+			if(!boxEl.msaBoxEditorEl) {
+				await import("/utils/msa-utils-text-editor.js")
+				boxEl.msaBoxEditorEl = document.createElement("msa-utils-text-editor")
+				boxEl.msaBoxEditorEl.initTarget(boxEl)
+			}
+			return boxEl.msaBoxEditorEl
+		} else {
+			if(boxEl.msaBoxEditorEl) {
+				boxEl.msaBoxEditorEl.remove()
+				delete boxEl.msaBoxEditorEl
+			}
+		}
 	}
 })
 
