@@ -571,6 +571,27 @@ function initLoader() {
 	importHtml(loaderHtml)
 }
 
+// icon //////////////////////////////////
+
+class MsaUtilsIconHTMLElement extends HTMLElement {
+	connectedCallback() {
+		const shdw = this.attachShadow({ mode: 'open' })
+		const iconEl = document.createElement("div")
+		Object.assign(iconEl.style, {
+			width: this.getAttribute("width") || this.style.width || "50px",
+			height: this.getAttribute("height") || this.style.height || "50px",
+			backgroundColor: this.getAttribute("color") || "black",
+			maskImage: `url(${this.getAttribute("src")})` || "",
+			maskRepeat: "no-repeat",
+			maskPosition: "center",
+			maskSize: "100%"
+		})
+		shdw.appendChild(iconEl)
+    }
+}
+customElements.define("msa-utils-icon", MsaUtilsIconHTMLElement)
+
+
 // utils ///////////////////////////////////
 
 function cloneEl(el) {
