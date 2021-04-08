@@ -1,6 +1,6 @@
-import { importHtml, Q } from "/utils/msa-utils.js"
-import { isSize, getSizeVal, getSizeUnit, trigger, backup, restore } from "/utils/msa-utils-common.js"
-import { addPopup } from "/utils/msa-utils-popup.js"
+import { importHtml, Q } from "/msa/utils/msa-utils.js"
+import { isSize, getSizeVal, getSizeUnit, trigger, backup, restore } from "/msa/utils/msa-utils-common.js"
+import { addPopup } from "/msa/utils/msa-utils-popup.js"
 
 // SVGs
 importHtml(`<svg id="msa-utils-flex-item-menu-svg" style="display:none">

@@ -1,4 +1,4 @@
-import { importHtml, fetchMsaBoxInfos } from "/utils/msa-utils.js"
+import { importHtml, fetchMsaBoxInfos } from "/msa/utils/msa-utils.js"
 
 importHtml(`<style>
 	msa-utils-boxes-menu .button {

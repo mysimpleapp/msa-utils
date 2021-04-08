@@ -1,7 +1,7 @@
-import { importHtml, importOnCall, createMsaBox, exportMsaBox, editMsaBox, forEachChildMsaBox } from "/utils/msa-utils.js"
+import { importHtml, importOnCall, createMsaBox, exportMsaBox, editMsaBox, forEachChildMsaBox } from "/msa/utils/msa-utils.js"
 
-const addPopup = importOnCall("/utils/msa-utils-popup.js", "addPopup")
-const setPositionRelativeTo = importOnCall("/utils/msa-utils-position.js", "setPositionRelativeTo")
+const addPopup = importOnCall("/msa/utils/msa-utils-popup.js", "addPopup")
+const setPositionRelativeTo = importOnCall("/msa/utils/msa-utils-position.js", "setPositionRelativeTo")
 
 importHtml(`<style>
 	.msa-utils-box-editable {
@@ -18,7 +18,7 @@ importHtml(`<style>
         min-width: 3em;
         height: 3em;
         background: white;
-        background-image: url('/utils/img/add');
+        background-image: url('/msa/utils/img/add');
         background-size: 1.5em;
         background-repeat: no-repeat;
         background-position: center;
@@ -33,7 +33,7 @@ importHtml(`<style>
         width: 2em;
         height: 2em;
         background: white;
-        background-image: url('/utils/img/add');
+        background-image: url('/msa/utils/img/add');
         background-size: 80%;
         background-repeat: no-repeat;
         background-position: center;
@@ -124,7 +124,7 @@ function _initFirstAddButtons(el, boxCtx) {
 
 function _initAddButton(el, addBtn, boxCtx, insertBoxFn) {
     addBtn.onclick = async () => {
-        await import("/utils/msa-utils-boxes-menu.js")
+        await import("/msa/utils/msa-utils-boxes-menu.js")
         const popup = await addPopup(el, document.createElement("msa-utils-boxes-menu"))
         popup.content.onSelect = async tag => {
             popup.remove()

@@ -1,6 +1,6 @@
-import { Q, importHtml, importOnCall } from "/utils/msa-utils.js"
+import { Q, importHtml, importOnCall } from "/msa/utils/msa-utils.js"
 
-const makeMovable = importOnCall("/utils/msa-utils-mover.js", "makeMovable")
+const makeMovable = importOnCall("/msa/utils/msa-utils-mover.js", "makeMovable")
 
 // SVGs
 importHtml(`<svg id="msa-utils-popup-svg" style="display:none">
@@ -249,7 +249,7 @@ export function addMessagePopup(parent, dom, kwargs) {
 
 export function addErrorPopup(parent, dom, kwargs) {
 	return addMessagePopup(parent, dom,
-		{ "icon":"/utils/img/error" , ...kwargs })
+		{ "icon":"/msa/utils/img/error" , ...kwargs })
 }
 
 

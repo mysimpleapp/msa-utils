@@ -1,6 +1,6 @@
-import { importHtml } from "/utils/msa-utils.js"
-import { backup, restore } from "/utils/msa-utils-common.js"
-import { setPositionRelativeTo } from "/utils/msa-utils-position.js"
+import { importHtml } from "/msa/utils/msa-utils.js"
+import { backup, restore } from "/msa/utils/msa-utils-common.js"
+import { setPositionRelativeTo } from "/msa/utils/msa-utils-position.js"
 
 importHtml(`<style>
 	msa-utils-resizer-handle {

@@ -1,6 +1,6 @@
-import { importHtml, Q } from "/utils/msa-utils.js"
-import "/utils/msa-utils-dropdown-menu.js"
-import { addPopup, addInputPopup } from "/utils/msa-utils-popup.js"
+import { importHtml, Q } from "/msa/utils/msa-utils.js"
+import "/msa/utils/msa-utils-dropdown-menu.js"
+import { addPopup, addInputPopup } from "/msa/utils/msa-utils-popup.js"
 
 // SVGs
 importHtml(`<svg id="msa-utils-text-editor-svg" style="display:none">

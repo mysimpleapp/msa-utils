@@ -22,7 +22,7 @@ const defaultImg = "<img src='data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3
 
 registerMsaBox("msa-utils-text-box", {
     title: "Text",
-    head: "/utils/msa-utils.js"
+    head: "/msa/utils/msa-utils.js"
 })
 
 

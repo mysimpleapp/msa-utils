@@ -5,7 +5,7 @@ export function importOnCall(src, fun) {
 	}
 }
 
-const addErrorPopup = importOnCall("/utils/msa-utils-popup.js", "addErrorPopup")
+const addErrorPopup = importOnCall("/msa/utils/msa-utils-popup.js", "addErrorPopup")
 const setMsaAppEditor = importOnCall("/msa-app-edition.js", "setMsaAppEditor")
 
 // method for cached query in dom
@@ -374,7 +374,7 @@ export async function registerMsaBox(tag, kwargs) {
 
 export function fetchMsaBoxInfos() {
 	if (!MsaBoxInfosPrm)
-		MsaBoxInfosPrm = ajax("GET", "/utils/boxes")
+		MsaBoxInfosPrm = ajax("GET", "/msa/utils/boxes")
 	return MsaBoxInfosPrm
 }
 
@@ -500,7 +500,7 @@ registerMsaBox("msa-utils-text-box", {
 	editBox: async function(boxEl, editable) {
 		if(editable) {
 			if(!boxEl.msaBoxEditorEl) {
-				await import("/utils/msa-utils-text-editor.js")
+				await import("/msa/utils/msa-utils-text-editor.js")
 				boxEl.msaBoxEditorEl = document.createElement("msa-utils-text-editor")
 				boxEl.msaBoxEditorEl.initTarget(boxEl)
 			}
